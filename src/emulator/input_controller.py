@@ -3,9 +3,15 @@
 import time
 from enum import Enum
 from typing import List, Optional
-import pyautogui
-import keyboard
 from loguru import logger
+
+# Lazy import for GUI dependencies (to support headless testing)
+try:
+    import pyautogui
+    import keyboard
+    GUI_AVAILABLE = True
+except Exception:
+    GUI_AVAILABLE = False
 
 
 class GameButton(Enum):
@@ -35,8 +41,9 @@ class InputController:
             window_name: Name of the emulator window
         """
         self.window_name = window_name
-        pyautogui.PAUSE = 0.05  # Small pause between actions
-        pyautogui.FAILSAFE = True  # Move mouse to corner to abort
+        if GUI_AVAILABLE:
+            pyautogui.PAUSE = 0.05  # Small pause between actions
+            pyautogui.FAILSAFE = True  # Move mouse to corner to abort
 
     def press_button(self, button: GameButton, duration: float = 0.1) -> None:
         """
@@ -46,6 +53,11 @@ class InputController:
             button: The button to press
             duration: How long to hold the button (seconds)
         """
+        if not GUI_AVAILABLE:
+            logger.warning("GUI not available, simulating button press")
+            time.sleep(duration)
+            return
+        
         try:
             key = button.value
             keyboard.press(key)
@@ -63,6 +75,11 @@ class InputController:
             buttons: List of buttons to press
             duration: How long to hold the buttons (seconds)
         """
+        if not GUI_AVAILABLE:
+            logger.warning("GUI not available, simulating button press")
+            time.sleep(duration)
+            return
+        
         try:
             keys = [btn.value for btn in buttons]
             for key in keys:
@@ -149,6 +166,10 @@ class InputController:
 
     def release_all(self) -> None:
         """Release all currently pressed buttons."""
+        if not GUI_AVAILABLE:
+            logger.warning("GUI not available, simulating release")
+            return
+        
         try:
             for button in GameButton:
                 keyboard.release(button.value)

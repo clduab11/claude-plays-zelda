@@ -3,10 +3,16 @@
 import time
 from typing import Optional, Tuple
 import numpy as np
-import pyautogui
 from PIL import Image
 import cv2
 from loguru import logger
+
+# Lazy import for GUI dependencies
+try:
+    import pyautogui
+    GUI_AVAILABLE = True
+except Exception:
+    GUI_AVAILABLE = False
 
 
 class ScreenCapture:
@@ -32,6 +38,14 @@ class ScreenCapture:
         Returns:
             numpy.ndarray: Captured image in BGR format, or None if capture failed
         """
+        if not GUI_AVAILABLE:
+            logger.warning("GUI not available, returning dummy image")
+            # Return a dummy image for testing
+            dummy_img = np.zeros((224, 256, 3), dtype=np.uint8)
+            self.last_capture = dummy_img
+            self.last_capture_time = time.time()
+            return dummy_img
+        
         try:
             # Capture the entire screen (in a real implementation, we'd focus on the window)
             screenshot = pyautogui.screenshot()
@@ -63,6 +77,10 @@ class ScreenCapture:
         Returns:
             numpy.ndarray: Captured region in BGR format
         """
+        if not GUI_AVAILABLE:
+            logger.warning("GUI not available, returning dummy region")
+            return np.zeros((height, width, 3), dtype=np.uint8)
+        
         try:
             screenshot = pyautogui.screenshot(region=(x, y, width, height))
             img_rgb = np.array(screenshot)
