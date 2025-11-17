@@ -1,0 +1,83 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+
+# Data directories
+data/screenshots/
+data/saves/
+data/logs/
+data/models/
+data/highlights/
+
+# ROMs (never commit ROMs!)
+*.smc
+*.sfc
+*.srm
+*.fig
+*.fst
+
+# Config files with sensitive data
+config.json
+secrets.json
+
+# Logs
+*.log
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Documentation builds
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# System files
+Thumbs.db

@@ -1,0 +1,58 @@
+# Core Dependencies
+anthropic>=0.39.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Computer Vision & OCR
+opencv-python>=4.8.0
+pillow>=10.0.0
+pytesseract>=0.3.10
+numpy>=1.24.0
+scikit-image>=0.21.0
+
+# Emulator Control
+pyautogui>=0.9.54
+keyboard>=0.13.5
+mss>=9.0.1
+pynput>=1.7.6
+
+# Machine Learning (Optional - for future enhancements)
+torch>=2.0.0
+torchvision>=0.15.0
+ultralytics>=8.0.0  # YOLOv8 for object detection
+
+# Streaming & Web
+Flask>=3.0.0
+Flask-SocketIO>=5.3.0
+python-socketio>=5.10.0
+streamlink>=6.0.0
+
+# Twitch Integration
+twitchio>=2.9.0
+python-twitch-client>=0.7.1
+
+# Data & Analytics
+pandas>=2.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Utilities
+colorama>=0.4.6
+tqdm>=4.66.0
+loguru>=0.7.0
+tenacity>=8.2.0
+click>=8.1.0
+
+# Development
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+black>=23.7.0
+flake8>=6.1.0
+mypy>=1.5.0
+isort>=5.12.0
+
+# Documentation
+sphinx>=7.0.0
+sphinx-rtd-theme>=1.3.0
