@@ -1,0 +1,68 @@
+# Claude AI Configuration
+claude:
+  api_key: ${ANTHROPIC_API_KEY}  # Set via environment variable
+  model: claude-3-5-sonnet-20241022
+  max_tokens: 4096
+  temperature: 0.7
+
+# Emulator Configuration
+emulator:
+  type: snes9x
+  executable_path: snes9x  # Path to SNES9x executable
+  rom_path: zelda_alttp.smc  # Path to Zelda: A Link to the Past ROM
+  window_name: Snes9x
+  fps: 60
+  save_state_dir: save_states
+
+# Computer Vision Configuration
+cv:
+  ocr:
+    language: eng
+    confidence_threshold: 60
+  object_detection:
+    confidence_threshold: 0.5
+    nms_threshold: 0.4
+  screen_capture:
+    interval: 0.1  # seconds between captures
+    resolution: [256, 224]  # SNES resolution
+
+# AI Agent Configuration
+agent:
+  decision_interval: 0.5  # seconds between decisions
+  memory:
+    max_history: 100
+    persistence_file: agent_memory.json
+  context:
+    max_tokens: 100000
+    summarize_threshold: 80000
+
+# Game Logic Configuration
+game:
+  combat:
+    aggressive_mode: false
+    dodge_priority: high
+  navigation:
+    pathfinding_algorithm: a_star
+    revisit_threshold: 3
+  objectives:
+    auto_save_interval: 300  # seconds
+
+# Streaming Configuration
+streaming:
+  enabled: false
+  twitch:
+    channel: ${TWITCH_CHANNEL}
+    oauth_token: ${TWITCH_OAUTH_TOKEN}
+  dashboard:
+    host: 0.0.0.0
+    port: 5000
+    enable_cors: true
+  stats:
+    update_interval: 5  # seconds
+
+# Logging Configuration
+logging:
+  level: INFO
+  file: logs/claude_zelda.log
+  console: true
+  format: "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>"
