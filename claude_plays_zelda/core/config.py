@@ -63,7 +63,6 @@ class Config(BaseSettings):
         """Initialize config and create necessary directories."""
         super().__init__(**kwargs)
         self._create_directories()
-        self._setup_logging()
 
     def _create_directories(self):
         """Create necessary directories if they don't exist."""
@@ -76,32 +75,6 @@ class Config(BaseSettings):
 
         for directory in dirs:
             directory.mkdir(parents=True, exist_ok=True)
-
-    def _setup_logging(self):
-        """Setup logging configuration."""
-        from loguru import logger
-        import sys
-
-        # Remove default logger
-        logger.remove()
-
-        # Add console logger
-        logger.add(
-            sys.stderr,
-            level=self.log_level,
-            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>",
-        )
-
-        # Add file logger
-        logger.add(
-            str(self.log_file),
-            level=self.log_level,
-            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function} - {message}",
-            rotation="10 MB",
-            retention="1 week",
-        )
-
-        logger.info("Logging configured")
 
     @classmethod
     def from_file(cls, config_path: str) -> "Config":
