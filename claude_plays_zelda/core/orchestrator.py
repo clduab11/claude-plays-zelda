@@ -257,14 +257,14 @@ class GameOrchestrator:
             success = True
             result = {}
 
-            if hearts_after < hearts_before:
-                success = False
-                result["damage_taken"] = hearts_before - hearts_after
-                feedback = f"Took {result['damage_taken']} damage"
-            elif hearts_after == 0:
+            if hearts_after == 0:
                 success = False
                 result["death"] = True
                 feedback = "Link died"
+            elif hearts_after < hearts_before:
+                success = False
+                result["damage_taken"] = hearts_before - hearts_after
+                feedback = f"Took {result['damage_taken']} damage"
             elif rupees_after > rupees_before:
                 result["rupees_gained"] = rupees_after - rupees_before
                 feedback = f"Collected {result['rupees_gained']} rupees"

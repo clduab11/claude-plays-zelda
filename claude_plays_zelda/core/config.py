@@ -23,7 +23,7 @@ class Config(BaseSettings):
     twitch_channel: Optional[str] = Field(None, description="Twitch channel name")
 
     # Claude Model Settings
-    claude_model: str = Field("claude-3-5-sonnet-20241022", description="Claude model to use")
+    claude_model: str = Field("claude-3-5-sonnet-20240620", description="Claude model to use")
     max_tokens: int = Field(4096, description="Maximum tokens for Claude responses")
 
     # Emulator Settings

@@ -10,7 +10,7 @@ def test_config_creation():
     try:
         config = Config(anthropic_api_key="test-key")
         assert config.anthropic_api_key == "test-key"
-        assert config.claude_model == "claude-3-5-sonnet-20241022"
+        assert config.claude_model == "claude-3-5-sonnet-20240620"
         assert config.decision_interval == 2.0
     except Exception:
         # Expected if validation fails
