@@ -4,7 +4,7 @@ import time
 from enum import Enum
 from typing import List, Optional, Dict
 import pyautogui
-from pynput.keyboard import Controller, Key
+
 from loguru import logger
 
 

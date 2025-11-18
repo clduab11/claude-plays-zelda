@@ -1,8 +1,6 @@
 """Highlight clip generator for key moments."""
 
-import os
 import time
-import threading
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 from datetime import datetime

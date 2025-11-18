@@ -1,8 +1,7 @@
 """WebSocket handler for real-time data streaming."""
 
-import json
 import time
-from typing import Dict, Any, List, Callable, Optional
+from typing import Dict, Any, Callable
 from datetime import datetime
 from collections import deque
 from flask_socketio import SocketIO

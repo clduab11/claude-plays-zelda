@@ -1,6 +1,7 @@
 """Dungeon navigation system for exploring dungeons and finding objectives."""
 
-from typing import Dict, Any, List, Optional, Set, Tuple
+import random
+from typing import Dict, Any, List, Optional, Set
 from collections import deque
 from loguru import logger
 
@@ -127,17 +128,11 @@ class DungeonNavigator:
 
         # Priority 3: Explore through doors
         if doors:
-            # Choose unexplored door if possible
-            door = doors[0]
-            center = door.get("center", (0, 0))
-
-            # Determine direction to door
-            # Simplified - would calculate actual direction
+            # Choose unexplored door if possible - simplified, would calculate actual direction
             logger.debug("Suggesting to explore through door")
             return {"action": "move", "parameters": {"direction": "up", "duration": 2.0, "run": False}}
 
         # Priority 4: Search for doors
-        import random
         direction = random.choice(["up", "down", "left", "right"])
         logger.debug(f"Suggesting exploratory movement: {direction}")
         return {"action": "move", "parameters": {"direction": direction, "duration": 1.5, "run": False}}
@@ -263,7 +258,7 @@ class DungeonNavigator:
         if objective not in self.objective_locations:
             return None
 
-        target_room = self.objective_locations[objective]
+        # target_room = self.objective_locations[objective]  # TODO: Use for pathfinding
 
         # Use BFS to find path
         # Simplified - would need current room parameter

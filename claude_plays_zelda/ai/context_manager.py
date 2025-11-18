@@ -1,6 +1,6 @@
 """Context manager for building and maintaining conversation context."""
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from collections import deque
 from loguru import logger
 

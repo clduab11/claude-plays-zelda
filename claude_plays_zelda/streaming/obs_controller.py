@@ -1,6 +1,4 @@
 """OBS WebSocket controller for stream automation."""
-
-import json
 from typing import Dict, Any, Optional
 from loguru import logger
 

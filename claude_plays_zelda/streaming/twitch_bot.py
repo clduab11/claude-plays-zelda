@@ -1,6 +1,4 @@
 """Twitch bot for chat interaction and stream management."""
-
-import asyncio
 from typing import Dict, Any, Optional, Callable
 from datetime import datetime
 from twitchio.ext import commands

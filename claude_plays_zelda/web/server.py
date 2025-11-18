@@ -3,7 +3,7 @@
 import threading
 from typing import Dict, Any, Optional
 from datetime import datetime
-from flask import Flask, render_template, jsonify, send_from_directory
+from flask import Flask, render_template, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from loguru import logger

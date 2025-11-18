@@ -263,7 +263,7 @@ class MapAnalyzer:
             List of directions where exits are detected
         """
         try:
-            height, width = image.shape[:2]
+            # height, width = image.shape[:2]  # TODO: Use for boundary detection
 
             # Check edges for dark areas (doorways)
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
