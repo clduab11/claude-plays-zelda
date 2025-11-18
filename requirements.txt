@@ -25,12 +25,20 @@ ultralytics>=8.0.0  # YOLOv8 for object detection
 # Streaming & Web
 Flask>=3.0.0
 Flask-SocketIO>=5.3.0
+Flask-CORS>=4.0.0
 python-socketio>=5.10.0
 streamlink>=6.0.0
+eventlet>=0.33.0
 
 # Twitch Integration
 twitchio>=2.9.0
 python-twitch-client>=0.7.1
+obsws-python>=1.6.0
+
+# Database & Caching
+psycopg2-binary>=2.9.0
+redis>=5.0.0
+sqlalchemy>=2.0.0
 
 # Data & Analytics
 pandas>=2.0.0
