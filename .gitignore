@@ -16,6 +16,8 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -81,3 +83,26 @@ docs/_templates/
 
 # System files
 Thumbs.db
+# Logs
+*.log
+logs/
+
+# Screenshots and recordings
+screenshots/
+recordings/
+stream_output/
+
+# Save states
+save_states/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Configuration overrides
+config.local.yaml

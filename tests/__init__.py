@@ -1,1 +1,1 @@
-"""Test suite for claude-plays-zelda."""
+"""Test suite for Claude Plays Zelda."""

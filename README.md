@@ -1,6 +1,6 @@
 # 🎮 Claude Plays Zelda
 
-> **An AI agent that autonomously plays The Legend of Zelda: A Link to the Past using computer vision, reinforcement learning, and Claude AI for decision-making.**
+> **An AI agent that autonomously plays The Legend of Zelda (1986, NES) using computer vision, reinforcement learning, SIMA 2, and Claude AI for decision-making.**
 
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -49,7 +49,7 @@ zelda-ai play --emulator-path /path/to/snes9x --rom-path /path/to/zelda.smc
 - **SNES Emulator** (Snes9x recommended)
 - **Tesseract OCR**
 - **Anthropic API Key** ([Get one free](https://console.anthropic.com/))
-- **Legal ROM** of Zelda: A Link to the Past
+- **Legal ROM** of The Legend of Zelda
 
 ## 🏗️ Architecture
 
@@ -186,10 +186,10 @@ Statistics are saved in `data/saves/agent_memory.json` and automatically updated
 
 ### ⚠️ ROM Requirements
 
-**You MUST legally own The Legend of Zelda: A Link to the Past to use this software.**
+**You MUST legally own The Legend of Zelda (1986) to use this software.**
 
 Legal ways to obtain a ROM:
-- Dump from your own SNES cartridge
+- Dump from your own NES cartridge
 - Purchase digital copy (e.g., Nintendo Switch Online)
 - Extract from legally purchased compilation
 
