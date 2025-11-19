@@ -78,7 +78,7 @@ class MapAnalyzer:
             logger.error(f"Error checking room change: {e}")
             return False
 
-    def analyze_minimap(self, minimap: np.ndarray) -> Dict[str, any]:
+    def analyze_minimap(self, minimap: np.ndarray) -> Dict[str, Any]:
         """
         Analyze the minimap to determine Link's position and surroundings.
 
@@ -263,7 +263,7 @@ class MapAnalyzer:
             List of directions where exits are detected
         """
         try:
-            height, width = image.shape[:2]
+            # height, width = image.shape[:2]  # TODO: Use for boundary detection
 
             # Check edges for dark areas (doorways)
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -297,7 +297,7 @@ class MapAnalyzer:
             logger.error(f"Error detecting room exits: {e}")
             return []
 
-    def get_exploration_stats(self) -> Dict[str, any]:
+    def get_exploration_stats(self) -> Dict[str, Any]:
         """
         Get statistics about exploration progress.
 

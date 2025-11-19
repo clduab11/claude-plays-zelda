@@ -1,6 +1,6 @@
 """Detects game state from screen (health, rupees, inventory, etc.)."""
 
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, Tuple
 import cv2
 import numpy as np
 from loguru import logger

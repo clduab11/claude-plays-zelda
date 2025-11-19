@@ -1,6 +1,7 @@
 """Action planner for breaking down high-level decisions into executable actions."""
 
-from typing import Dict, Any, List, Optional
+import random
+from typing import Dict, Any, List
 from enum import Enum
 from loguru import logger
 
@@ -74,18 +75,12 @@ class ActionPlanner:
 
         if doors:
             # Move towards nearest door
-            door = doors[0]
-            center = door.get("center", (0, 0))
-
-            # Determine direction to door
             # This is simplified - actual implementation would calculate direction
             actions.append(
                 {"action": "move", "parameters": {"direction": "up", "duration": 2.0, "run": False}}
             )
         else:
             # Random exploration
-            import random
-
             direction = random.choice(["up", "down", "left", "right"])
             actions.append(
                 {"action": "move", "parameters": {"direction": direction, "duration": 2.0, "run": False}}
@@ -107,11 +102,15 @@ class ActionPlanner:
         enemy = enemies[0]  # Target first enemy
 
         # Approach and attack
-        actions.append({"action": "attack", "parameters": {"charge": False}})
+        actions.append({
+            "action": "attack",
+            "parameters": {
+                "target_id": enemy.get("id", 0),
+                "charge": False
+            }
+        })
 
         # Dodge after attack
-        import random
-
         dodge_direction = random.choice(["up", "down", "left", "right"])
         actions.append(
             {"action": "move", "parameters": {"direction": dodge_direction, "duration": 0.3, "run": True}}
@@ -128,9 +127,6 @@ class ActionPlanner:
 
         if items:
             # Move towards nearest item
-            item = items[0]
-            center = item.get("center", (0, 0))
-
             # Simplified - move in general direction
             actions.append(
                 {"action": "move", "parameters": {"direction": "up", "duration": 1.0, "run": True}}

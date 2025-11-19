@@ -1,14 +1,12 @@
 """Main orchestrator that coordinates all subsystems."""
-
-import time
 from typing import Dict, Any, Optional
 from datetime import datetime
 from loguru import logger
 
 from claude_plays_zelda.core.config import Config
-from claude_plays_zelda.emulator import EmulatorManager, ScreenCapture, InputController
+from claude_plays_zelda.emulator import EmulatorManager
 from claude_plays_zelda.vision import GameOCR, ObjectDetector, GameStateDetector, MapAnalyzer
-from claude_plays_zelda.ai import ClaudeAgent, ContextManager, ActionPlanner, AgentMemory
+from claude_plays_zelda.ai import ClaudeAgent
 from claude_plays_zelda.game import CombatAI, DungeonNavigator, PuzzleSolver, ZeldaKnowledge
 
 
@@ -257,14 +255,14 @@ class GameOrchestrator:
             success = True
             result = {}
 
-            if hearts_after < hearts_before:
-                success = False
-                result["damage_taken"] = hearts_before - hearts_after
-                feedback = f"Took {result['damage_taken']} damage"
-            elif hearts_after == 0:
+            if hearts_after == 0:
                 success = False
                 result["death"] = True
                 feedback = "Link died"
+            elif hearts_after < hearts_before:
+                success = False
+                result["damage_taken"] = hearts_before - hearts_after
+                feedback = f"Took {result['damage_taken']} damage"
             elif rupees_after > rupees_before:
                 result["rupees_gained"] = rupees_after - rupees_before
                 feedback = f"Collected {result['rupees_gained']} rupees"

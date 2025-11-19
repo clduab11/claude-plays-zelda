@@ -16,6 +16,7 @@ pyautogui>=0.9.54
 keyboard>=0.13.5
 mss>=9.0.1
 pynput>=1.7.6
+pygetwindow>=0.0.9
 
 # Machine Learning (Optional - for future enhancements)
 torch>=2.0.0

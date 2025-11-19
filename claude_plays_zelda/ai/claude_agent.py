@@ -1,6 +1,7 @@
 """Main Claude AI agent for playing Zelda."""
 
 import json
+import re
 from typing import Dict, Any, List, Optional
 from anthropic import Anthropic
 from loguru import logger
@@ -227,8 +228,6 @@ Think step by step and make smart decisions to progress through the game!"""
         try:
             # Try to extract JSON from response
             # Sometimes Claude includes text before/after JSON
-            import re
-
             json_match = re.search(r"\{[\s\S]*\}", response_text)
             if json_match:
                 json_str = json_match.group(0)

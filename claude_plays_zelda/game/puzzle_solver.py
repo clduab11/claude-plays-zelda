@@ -1,6 +1,6 @@
 """Puzzle solving logic for Zelda dungeons."""
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from enum import Enum
 from loguru import logger
 
