@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "An AI agent that autonomously plays Legend of Zelda using computer vision and Claude API"
 readme = "README.md"
 requires-python = ">=3.9"
-license = "MIT"
+license = {text = "MIT"}
 authors = [
     {name = "Claude AI Agent"}
 ]
