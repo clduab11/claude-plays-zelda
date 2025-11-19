@@ -1,250 +1,285 @@
-# Claude Plays The Legend of Zelda
+# 🎮 Claude Plays Zelda
 
-An AI system that autonomously plays The Legend of Zelda: A Link to the Past using Claude API and computer vision.
+> **An AI agent that autonomously plays The Legend of Zelda (1986, NES) using computer vision, reinforcement learning, SIMA 2, and Claude AI for decision-making.**
 
-## Overview
+![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Status](https://img.shields.io/badge/status-alpha-orange.svg)
 
-This project creates an AI agent powered by Anthropic's Claude that can play The Legend of Zelda: A Link to the Past on SNES9x emulator. The AI uses computer vision to analyze the game state, makes decisions using Claude's reasoning capabilities, and executes actions in real-time.
+**Claude takes on Hyrule!** Watch as an AI agent explores, fights, solves puzzles, and progresses through one of the greatest games of all time.
 
-## Features
+## ✨ Key Features
 
-### 🎮 Core Modules
+- 🤖 **Intelligent AI Agent**: Powered by Claude API for human-like decision-making
+- 👁️ **Computer Vision**: Real-time OCR, object detection, and game state analysis
+- ⚔️ **Combat AI**: Smart enemy engagement with pattern recognition
+- 🗺️ **Dungeon Navigation**: Systematic exploration and puzzle-solving
+- 🧠 **Learning System**: Tracks progress, learns from failures, improves over time
+- 💾 **Save States**: Automatic checkpointing and progress tracking
+- 📊 **Analytics Dashboard**: Real-time statistics and performance monitoring
+- 🎮 **Full Emulator Integration**: Seamless SNES9x/ZSNES control
 
-1. **Emulator Interface**
-   - SNES9x process control and management
-   - Real-time screen capture
-   - Keyboard input injection for controller emulation
-   - Save state management
+## 🎥 Demo
 
-2. **Computer Vision System**
-   - OCR for reading in-game text and dialog
-   - Object detection for enemies, items, hearts, and rupees
-   - Map recognition and location tracking
-   - Health and inventory monitoring from HUD
+*(Coming soon - AI gameplay videos)*
 
-3. **AI Agent (Claude Integration)**
-   - Claude API integration for decision making
-   - Context management system with summarization
-   - Action planning and execution
-   - Persistent memory system for game progress
+## 📋 Quick Start
 
-4. **Game Logic**
-   - Combat AI with strategic decision making
-   - Puzzle solving algorithms
-   - Navigation and pathfinding (A*, BFS, DFS)
-   - Quest and objective tracking
-
-5. **Streaming & Dashboard**
-   - Real-time web dashboard for monitoring
-   - Live statistics and metrics
-   - Event logging and tracking
-   - Optional Twitch streaming support
-
-## Requirements
-
-- Python 3.11+
-- SNES9x emulator
-- The Legend of Zelda: A Link to the Past ROM
-- Anthropic API key
-
-## Installation
-
-1. Clone the repository:
 ```bash
+# 1. Clone repository
 git clone https://github.com/clduab11/claude-plays-zelda.git
 cd claude-plays-zelda
-```
 
-2. Install dependencies:
-```bash
+# 2. Install dependencies
 pip install -r requirements.txt
+
+# 3. Configure (add your API key and paths)
+cp .env.example .env
+nano .env
+
+# 4. Run!
+zelda-ai play --emulator-path /path/to/snes9x --rom-path /path/to/zelda.smc
 ```
 
-3. Install Tesseract OCR (for text recognition):
-   - **Ubuntu/Debian**: `sudo apt-get install tesseract-ocr`
-   - **macOS**: `brew install tesseract`
-   - **Windows**: Download from [GitHub](https://github.com/UB-Mannheim/tesseract/wiki)
+📖 **[Full Setup Guide](SETUP_GUIDE.md)** for detailed instructions.
 
-4. Create a `.env` file with your API key:
-```bash
-ANTHROPIC_API_KEY=your_api_key_here
+## 🔧 Requirements
+
+- **Python 3.9+**
+- **SNES Emulator** (Snes9x recommended)
+- **Tesseract OCR**
+- **Anthropic API Key** ([Get one free](https://console.anthropic.com/))
+- **Legal ROM** of The Legend of Zelda
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Game Orchestrator                     │
+└────────┬──────────────────────────────────────┬─────────┘
+         │                                      │
+    ┌────▼─────┐                          ┌────▼─────┐
+    │ Emulator │                          │ AI Agent │
+    │ Manager  │                          │ (Claude) │
+    └────┬─────┘                          └────┬─────┘
+         │                                      │
+    ┌────▼─────────┐                     ┌────▼──────┐
+    │ Screen       │                     │ Context   │
+    │ Capture      │────────────────────▶│ Manager   │
+    └──────────────┘                     └───────────┘
+         │                                      │
+    ┌────▼──────────┐                    ┌────▼────────┐
+    │ Computer      │                    │ Action      │
+    │ Vision System │───────────────────▶│ Planner     │
+    └───────────────┘                    └─────┬───────┘
+         │                                      │
+    ┌────▼─────────┐                     ┌────▼──────┐
+    │ Game State   │                     │ Memory &  │
+    │ Detector     │────────────────────▶│ Learning  │
+    └──────────────┘                     └───────────┘
 ```
 
-5. Configure `config.yaml`:
-   - Set the path to your SNES9x executable
-   - Set the path to your Zelda ROM file
-   - Adjust other settings as needed
+### Core Components
 
-## Usage
+| Module | Description |
+|--------|-------------|
+| **Emulator Integration** | Screen capture, input control, process management |
+| **Computer Vision** | OCR, object detection, state analysis, map recognition |
+| **AI Agent** | Claude API integration, decision-making, context management |
+| **Game Logic** | Combat strategies, dungeon navigation, puzzle solving |
+| **Memory System** | Progress tracking, learned strategies, statistics |
+
+## 💻 Usage Examples
 
 ### Basic Usage
 
-Run the AI with default settings:
 ```bash
-python main.py
+# Play with default settings
+zelda-ai play
+
+# Play with custom configuration
+zelda-ai play --config my_config.json
+
+# Run for limited time (testing)
+zelda-ai play --max-iterations 50
 ```
 
-### With Dashboard
+### Python API
 
-The web dashboard starts automatically if enabled in `config.yaml`:
-```yaml
-streaming:
-  enabled: true
-  dashboard:
-    host: 0.0.0.0
-    port: 5000
+```python
+from claude_plays_zelda.core import Config, GameLoop
+
+# Configure
+config = Config(
+    anthropic_api_key="your-key",
+    emulator_path="/path/to/snes9x",
+    rom_path="/path/to/zelda.smc",
+    decision_interval=2.0
+)
+
+# Run
+game_loop = GameLoop(config)
+game_loop.run()
 ```
 
-Access the dashboard at `http://localhost:5000`
+### Advanced Control
 
-### Configuration
+```python
+from claude_plays_zelda.core import GameOrchestrator
 
-Edit `config.yaml` to customize:
-- Claude model and parameters
-- Emulator settings
-- Computer vision thresholds
-- AI decision intervals
-- Combat and exploration strategies
-- Dashboard settings
+orchestrator = GameOrchestrator(config)
+orchestrator.start()
 
-## Architecture
+while orchestrator.is_running:
+    frame_data = orchestrator.process_frame()
+    decision = orchestrator.make_decision(frame_data)
+    orchestrator.execute_action(decision)
 
-```
-┌─────────────────────────────────────────────────┐
-│                  Main Controller                 │
-└─────────────────┬───────────────────────────────┘
-                  │
-        ┌─────────┼─────────┐
-        │         │         │
-┌───────▼─────┐ ┌▼─────────▼┐ ┌──────────────┐
-│  Emulator   │ │    CV      │ │  AI Agent    │
-│  Interface  │ │  System    │ │   (Claude)   │
-├─────────────┤ ├────────────┤ ├──────────────┤
-│ • SNES9x    │ │ • OCR      │ │ • Decision   │
-│ • Screen    │ │ • Detection│ │ • Context    │
-│ • Input     │ │ • Maps     │ │ • Memory     │
-└─────────────┘ └────────────┘ └──────────────┘
-        │         │         │
-        └─────────┼─────────┘
-                  │
-        ┌─────────▼─────────┐
-        │   Game Logic      │
-        ├───────────────────┤
-        │ • Combat AI       │
-        │ • Puzzle Solver   │
-        │ • Navigation      │
-        └───────────────────┘
-                  │
-        ┌─────────▼─────────┐
-        │    Streaming      │
-        ├───────────────────┤
-        │ • Dashboard       │
-        │ • Statistics      │
-        └───────────────────┘
+orchestrator.stop()
 ```
 
-## Project Structure
+## 🎯 What the AI Can Do
 
-```
-claude-plays-zelda/
-├── src/
-│   ├── emulator/          # Emulator control
-│   │   ├── emulator_interface.py
-│   │   ├── input_controller.py
-│   │   └── screen_capture.py
-│   ├── cv/                # Computer vision
-│   │   ├── ocr_engine.py
-│   │   ├── object_detector.py
-│   │   ├── map_recognizer.py
-│   │   └── game_state_analyzer.py
-│   ├── agent/             # AI agent
-│   │   ├── claude_client.py
-│   │   ├── context_manager.py
-│   │   ├── action_planner.py
-│   │   └── memory_system.py
-│   ├── game/              # Game logic
-│   │   ├── combat_ai.py
-│   │   ├── puzzle_solver.py
-│   │   └── navigation.py
-│   └── streaming/         # Streaming & dashboard
-│       ├── dashboard.py
-│       └── stats_tracker.py
-├── tests/                 # Test suite
-│   ├── unit/
-│   └── integration/
-├── logs/                  # Log files
-├── config.yaml            # Configuration
-├── requirements.txt       # Dependencies
-├── main.py               # Entry point
-└── README.md             # This file
-```
+✅ **Exploration**
+- Navigate the overworld
+- Enter buildings and caves
+- Track visited locations
+- Discover secrets
 
-## How It Works
+✅ **Combat**
+- Engage enemies strategically
+- Learn attack patterns
+- Use different weapons
+- Manage health
 
-1. **Screen Capture**: Continuously captures the game screen
-2. **State Analysis**: Computer vision analyzes the screen to extract:
-   - Current health, rupees, and inventory
-   - Visible enemies and items
-   - Location and map position
-   - Dialog text
-3. **Decision Making**: Claude receives the game state and decides on the next action
-4. **Action Execution**: The action planner converts high-level decisions into specific button inputs
-5. **Memory & Learning**: The system tracks progress, learns patterns, and maintains context
+✅ **Progression**
+- Complete dungeons
+- Solve puzzles
+- Talk to NPCs
+- Collect items
 
-## Development
+✅ **Learning**
+- Remember strategies
+- Learn from deaths
+- Track progress
+- Optimize gameplay
 
-### Running Tests
+## 📊 Monitoring & Statistics
 
 ```bash
-pytest tests/
+# View agent statistics
+zelda-ai show-stats
+
+# Output:
+# 📊 Agent Statistics:
+#   Total Decisions: 1,234
+#   Success Rate: 78.5%
+#   Deaths: 12
+#   Enemies Defeated: 145
+#   Items Collected: 23
+#   Rooms Explored: 67
 ```
 
-### Code Style
+Statistics are saved in `data/saves/agent_memory.json` and automatically updated.
 
-The project follows PEP 8 style guidelines. Format code with:
+## 🔒 Legal Notice
+
+### ⚠️ ROM Requirements
+
+**You MUST legally own The Legend of Zelda (1986) to use this software.**
+
+Legal ways to obtain a ROM:
+- Dump from your own NES cartridge
+- Purchase digital copy (e.g., Nintendo Switch Online)
+- Extract from legally purchased compilation
+
+**This project does NOT provide ROMs.**
+
+### Fair Use
+
+This is an educational and research project demonstrating:
+- AI decision-making in complex environments
+- Computer vision applications in gaming
+- Reinforcement learning concepts
+
+*The Legend of Zelda is a registered trademark of Nintendo. This project is not affiliated with or endorsed by Nintendo.*
+
+## 🤝 Contributing
+
+Contributions welcome! Please see our [Contributing Guide](CONTRIBUTING.md).
+
+### Development Setup
+
 ```bash
-black src/ tests/
+# Install with dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Format code
+black claude_plays_zelda/
+isort claude_plays_zelda/
+
+# Type checking
+mypy claude_plays_zelda/
 ```
 
-### Contributing
+## 🐛 Common Issues
 
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+| Issue | Solution |
+|-------|----------|
+| "Window not found" | Check `WINDOW_TITLE` matches emulator window |
+| "API key invalid" | Verify key in `.env` file |
+| "Tesseract not found" | Install Tesseract OCR and add to PATH |
+| Screen capture fails | Grant screen recording permissions (macOS) |
 
-## Limitations
+📖 See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed troubleshooting.
 
-- Requires SNES9x emulator to be installed and configured
-- Computer vision detection accuracy depends on screen quality
-- Claude API usage incurs costs based on token usage
-- Performance varies based on game complexity and AI decisions
+## 📚 Documentation
 
-## Future Enhancements
+- **[Setup Guide](SETUP_GUIDE.md)** - Installation and configuration
+- **[API Documentation](docs/)** - Code reference (coming soon)
+- **[Architecture](docs/ARCHITECTURE.md)** - System design (coming soon)
+- **[Contributing](CONTRIBUTING.md)** - Development guide (coming soon)
 
+## 🚧 Roadmap
+
+- [ ] Web dashboard for real-time monitoring
 - [ ] Twitch streaming integration
-- [ ] Machine learning for object detection
-- [ ] Advanced puzzle solving with pattern recognition
-- [ ] Multi-game support (other Zelda titles)
+- [ ] Deep learning models for improved vision
+- [ ] Support for other Zelda games
+- [ ] Reinforcement learning optimizations
 - [ ] Voice commentary generation
-- [ ] Speedrun optimization mode
+- [ ] Speedrun mode
 
-## License
+## 🙏 Acknowledgments
 
-This project is for educational and research purposes. The Legend of Zelda is property of Nintendo.
+- Inspired by [ClaudePlaysPokemonStarter](https://github.com/davidhershey/ClaudePlaysPokemonStarter)
+- Powered by [Anthropic Claude API](https://www.anthropic.com/)
+- Built with [Snes9x](https://www.snes9x.com/) emulator
+- Computer vision: OpenCV, Tesseract OCR
 
-## Acknowledgments
+## 📜 License
 
-- Anthropic for Claude API
-- SNES9x emulator team
-- The Zelda community
+MIT License - see [LICENSE](LICENSE) file for details.
 
-## Support
+## 📞 Support
 
-For issues, questions, or contributions, please open an issue on GitHub.
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/clduab11/claude-plays-zelda/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/clduab11/claude-plays-zelda/discussions)
+- 📧 **Contact**: See GitHub profile
+
+## ⭐ Star History
+
+If you find this project interesting, please give it a star! It helps others discover it.
 
 ---
 
-**Note**: This AI plays Zelda autonomously using computer vision and Claude's reasoning. It's a demonstration of AI capabilities in game playing and decision making.
+<div align="center">
+
+**Made with ❤️ and AI**
+
+[Report Bug](https://github.com/clduab11/claude-plays-zelda/issues) · [Request Feature](https://github.com/clduab11/claude-plays-zelda/issues) · [Documentation](SETUP_GUIDE.md)
+
+</div>

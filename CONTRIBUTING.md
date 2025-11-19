@@ -1,105 +1,54 @@
 # Contributing to Claude Plays Zelda
 
-Thank you for your interest in contributing! This guide will help you get started.
+Thank you for your interest in contributing to Claude Plays Zelda! This document provides guidelines for contributing to the project.
+
+## Code of Conduct
+
+Be respectful, inclusive, and constructive. We welcome contributors of all skill levels.
+
+## Getting Started
+
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/claude-plays-zelda.git`
+3. Create a branch: `git checkout -b feature/your-feature-name`
+4. Make your changes
+5. Test your changes
+6. Commit with clear messages
+7. Push to your fork
+8. Open a Pull Request
 
 ## Development Setup
 
-1. **Fork and clone the repository**
 ```bash
-git clone https://github.com/YOUR_USERNAME/claude-plays-zelda.git
-cd claude-plays-zelda
-```
-
-2. **Create a virtual environment**
-```bash
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+source venv/bin/activate  # or venv\Scripts\activate on Windows
 
-3. **Install dependencies**
-```bash
+# Install dependencies
 pip install -r requirements.txt
-pip install -e .  # Install in development mode
-```
+pip install -e ".[dev]"
 
-4. **Set up pre-commit hooks** (optional)
-```bash
-pip install pre-commit
-pre-commit install
+# Run tests
+pytest
+
+# Format code
+black claude_plays_zelda/
+isort claude_plays_zelda/
+
+# Type checking
+mypy claude_plays_zelda/
 ```
 
 ## Project Structure
 
 ```
-claude-plays-zelda/
-├── src/
-│   ├── emulator/      # Emulator control
-│   ├── cv/            # Computer vision
-│   ├── agent/         # AI agent (Claude)
-│   ├── game/          # Game logic
-│   └── streaming/     # Dashboard & stats
-├── tests/
-│   ├── unit/          # Unit tests
-│   └── integration/   # Integration tests
-├── config.yaml        # Configuration
-└── main.py           # Entry point
-```
-
-## How to Contribute
-
-### Reporting Bugs
-
-1. Check if the issue already exists
-2. Include:
-   - Python version
-   - Operating system
-   - Steps to reproduce
-   - Expected vs actual behavior
-   - Relevant logs
-
-### Suggesting Features
-
-1. Open an issue with the `enhancement` label
-2. Describe:
-   - Use case
-   - Proposed solution
-   - Alternative approaches considered
-
-### Pull Requests
-
-1. **Create a branch**
-```bash
-git checkout -b feature/your-feature-name
-```
-
-2. **Make your changes**
-   - Follow the coding style (PEP 8)
-   - Add tests for new features
-   - Update documentation
-
-3. **Run tests**
-```bash
-pytest tests/
-```
-
-4. **Commit your changes**
-```bash
-git add .
-git commit -m "feat: add new feature"
-```
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `docs:` - Documentation
-- `test:` - Tests
-- `refactor:` - Code refactoring
-- `style:` - Formatting
-- `chore:` - Maintenance
-
-5. **Push and create PR**
-```bash
-git push origin feature/your-feature-name
+claude_plays_zelda/
+├── ai/          # AI agent and decision-making
+├── core/        # Core orchestration
+├── emulator/    # Emulator integration
+├── game/        # Game-specific logic
+├── vision/      # Computer vision
+└── utils/       # Utilities
 ```
 
 ## Coding Standards
@@ -108,155 +57,275 @@ git push origin feature/your-feature-name
 
 - Follow PEP 8
 - Use type hints
-- Add docstrings for public methods
-- Maximum line length: 100 characters
+- Write docstrings for all public functions/classes
+- Keep functions focused and small
+- Use meaningful variable names
+
+### Example
 
 ```python
-def example_function(param: str, optional: int = 0) -> bool:
+def process_game_state(frame: np.ndarray, detector: GameStateDetector) -> Dict[str, Any]:
     """
-    Brief description.
+    Process a game frame to extract state information.
 
     Args:
-        param: Description of param
-        optional: Description of optional param
+        frame: Game frame as numpy array
+        detector: Initialized game state detector
 
     Returns:
-        Description of return value
+        Dictionary containing game state information
+
+    Raises:
+        ValueError: If frame is invalid
     """
-    return True
+    if frame is None or frame.size == 0:
+        raise ValueError("Invalid frame provided")
+
+    state = detector.get_full_game_state(frame)
+    return state
 ```
 
-### Testing
+### Formatting
+
+We use:
+- **black** for code formatting
+- **isort** for import sorting
+- **mypy** for type checking
+- **flake8** for linting
+
+Run before committing:
+```bash
+black .
+isort .
+mypy claude_plays_zelda/
+flake8 claude_plays_zelda/
+```
+
+## Testing
+
+### Writing Tests
 
 - Write tests for new features
+- Use pytest
 - Aim for >80% code coverage
-- Use descriptive test names
+- Test edge cases and error conditions
+
+### Example Test
 
 ```python
-def test_action_planner_parses_move_up_correctly():
-    """Test that action planner correctly parses 'move_up' command."""
-    planner = ActionPlanner(mock_controller)
-    action = planner.parse_action("move_up")
-    assert action.action_type == ActionType.MOVE_UP
+def test_game_state_detector():
+    """Test game state detection."""
+    detector = GameStateDetector()
+
+    # Create mock frame
+    frame = np.zeros((224, 256, 3), dtype=np.uint8)
+
+    # Test detection
+    state = detector.get_full_game_state(frame)
+
+    assert "hearts" in state
+    assert "rupees" in state
 ```
-
-### Documentation
-
-- Update README for user-facing changes
-- Add docstrings for new modules/classes
-- Include code examples where helpful
-
-## Areas for Contribution
-
-### Easy (Good First Issues)
-
-- Add more unit tests
-- Improve documentation
-- Fix typos
-- Add code comments
-
-### Medium
-
-- Enhance object detection accuracy
-- Improve puzzle-solving algorithms
-- Add new combat strategies
-- Optimize performance
-
-### Advanced
-
-- Implement Twitch streaming
-- Add ML-based object detection
-- Multi-game support
-- Speedrun optimization mode
-
-## Testing Guidelines
 
 ### Running Tests
 
 ```bash
 # All tests
-pytest tests/
+pytest
 
 # Specific test file
-pytest tests/unit/test_action_planner.py
+pytest tests/test_config.py
 
-# With coverage report
-pytest tests/ --cov=src --cov-report=html
-
-# Verbose output
-pytest tests/ -v
+# With coverage
+pytest --cov=claude_plays_zelda --cov-report=html
 ```
 
-### Writing Tests
+## Pull Request Process
 
-1. **Unit Tests** - Test individual components
-   - Location: `tests/unit/`
-   - Use mocks for dependencies
-   - Fast execution
+1. **Update documentation** if needed
+2. **Add tests** for new features
+3. **Ensure all tests pass**
+4. **Format code** with black/isort
+5. **Update CHANGELOG** if applicable
+6. **Write clear PR description**:
+   - What does this change?
+   - Why is it needed?
+   - How was it tested?
 
-2. **Integration Tests** - Test component interactions
-   - Location: `tests/integration/`
-   - May require setup/teardown
-   - Slower execution
+### PR Template
 
-## Code Review Process
+```markdown
+## Description
+Brief description of changes
 
-1. **Automated checks must pass**
-   - Tests
-   - Linting
-   - Code coverage
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Performance improvement
+- [ ] Code refactoring
 
-2. **Review criteria**
-   - Code quality
-   - Test coverage
-   - Documentation
-   - Performance impact
+## Testing
+- [ ] Tests added/updated
+- [ ] All tests passing
+- [ ] Manual testing completed
 
-3. **Response time**
-   - We aim to review PRs within 3-5 days
-   - Be patient and responsive to feedback
+## Checklist
+- [ ] Code formatted with black/isort
+- [ ] Type hints added
+- [ ] Docstrings updated
+- [ ] Documentation updated
+```
 
-## Getting Help
+## Areas for Contribution
 
-- **Discord**: [Join our server](https://discord.gg/example)
-- **GitHub Discussions**: For questions and ideas
-- **Issues**: For bugs and feature requests
+### High Priority
 
-## Recognition
+- 🐛 **Bug Fixes**: Fix known issues
+- 📝 **Documentation**: Improve docs and examples
+- 🧪 **Tests**: Increase test coverage
+- 🎯 **Game Logic**: Improve AI strategies
 
-Contributors will be:
-- Listed in the README
-- Mentioned in release notes
-- Credited in documentation
+### Medium Priority
 
-## Code of Conduct
+- 🎨 **Computer Vision**: Better detection algorithms
+- 🧠 **AI Improvements**: Smarter decision-making
+- 📊 **Analytics**: Better statistics and tracking
+- 🎮 **Emulator Support**: Additional emulators
 
-### Our Pledge
+### Lower Priority
 
-We pledge to make participation in our project a harassment-free experience for everyone.
+- 🌐 **Web Dashboard**: Real-time monitoring UI
+- 📹 **Streaming**: Twitch integration
+- 🎬 **Highlights**: Automated clip generation
+- 🗣️ **Commentary**: Voice generation
 
-### Our Standards
+## Adding New Features
 
-**Positive behavior:**
-- Using welcoming language
-- Being respectful of differing viewpoints
-- Gracefully accepting constructive criticism
-- Focusing on what is best for the community
+### New Vision Feature
 
-**Unacceptable behavior:**
-- Trolling, insulting, or derogatory comments
-- Public or private harassment
-- Publishing others' private information
-- Other unethical or unprofessional conduct
+1. Add to `claude_plays_zelda/vision/`
+2. Implement class with clear interface
+3. Add tests in `tests/`
+4. Update orchestrator to use it
+5. Document in README
 
-### Enforcement
+### New Game Logic
 
-Instances of abusive behavior may be reported to project maintainers. All complaints will be reviewed and investigated.
+1. Add to `claude_plays_zelda/game/`
+2. Follow existing patterns
+3. Integrate with game knowledge base
+4. Add strategy tests
+5. Update AI agent to use it
+
+### New AI Strategy
+
+1. Modify `claude_plays_zelda/ai/`
+2. Update prompts if needed
+3. Add to action planner
+4. Test with actual gameplay
+5. Document strategy
+
+## Documentation
+
+### Docstring Format
+
+Use Google-style docstrings:
+
+```python
+def function_name(param1: str, param2: int) -> bool:
+    """
+    Short description.
+
+    Longer description if needed. Can span multiple
+    lines and include examples.
+
+    Args:
+        param1: Description of param1
+        param2: Description of param2
+
+    Returns:
+        Description of return value
+
+    Raises:
+        ValueError: When param1 is empty
+        TypeError: When param2 is negative
+
+    Example:
+        >>> function_name("test", 42)
+        True
+    """
+```
+
+### README Updates
+
+When adding features:
+- Update feature list
+- Add usage examples
+- Update architecture section if needed
+- Add to roadmap or remove if completed
+
+## Commit Messages
+
+### Format
+
+```
+type(scope): short description
+
+Longer description if needed.
+
+Fixes #123
+```
+
+### Types
+
+- **feat**: New feature
+- **fix**: Bug fix
+- **docs**: Documentation only
+- **style**: Formatting changes
+- **refactor**: Code refactoring
+- **test**: Adding tests
+- **chore**: Maintenance tasks
+
+### Examples
+
+```
+feat(vision): add enemy health detection
+
+Implements health bar detection for enemies using
+color-based segmentation.
+
+Closes #45
+```
+
+```
+fix(emulator): resolve window focus issue on macOS
+
+Window focus was failing on macOS due to missing
+permissions check.
+
+Fixes #67
+```
+
+## Review Process
+
+1. **Automated checks** run on PR
+2. **Maintainer review** (usually within 3-7 days)
+3. **Changes requested** if needed
+4. **Approval** when ready
+5. **Merge** by maintainer
+
+## Questions?
+
+- Check [README](README.md)
+- Check [Setup Guide](SETUP_GUIDE.md)
+- Open an [Issue](https://github.com/clduab11/claude-plays-zelda/issues)
+- Start a [Discussion](https://github.com/clduab11/claude-plays-zelda/discussions)
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the same license as the project.
+By contributing, you agree that your contributions will be licensed under the MIT License.
 
 ---
 
-**Thank you for contributing to Claude Plays Zelda!** 🎮✨
+Thank you for contributing! 🎮🙏

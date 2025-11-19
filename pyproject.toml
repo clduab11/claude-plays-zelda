@@ -1,0 +1,147 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claude-plays-zelda"
+version = "0.1.0"
+description = "An AI agent that autonomously plays Legend of Zelda using computer vision and Claude API"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Claude AI Agent"}
+]
+keywords = ["ai", "gaming", "zelda", "computer-vision", "reinforcement-learning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Games/Entertainment",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "anthropic>=0.39.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "opencv-python>=4.8.0",
+    "pillow>=10.0.0",
+    "pytesseract>=0.3.10",
+    "numpy>=1.24.0",
+    "pyautogui>=0.9.54",
+    "keyboard>=0.13.5",
+    "mss>=9.0.1",
+    "pynput>=1.7.6",
+    "pygetwindow>=0.0.9",
+    "Flask>=3.0.0",
+    "Flask-SocketIO>=5.3.0",
+    "Flask-CORS>=4.0.0",
+    "python-socketio>=5.10.0",
+    "eventlet>=0.33.0",
+    "twitchio>=2.9.0",
+    "python-twitch-client>=0.7.1",
+    "obsws-python>=1.6.0",
+    "psycopg2-binary>=2.9.0",
+    "redis>=5.0.0",
+    "sqlalchemy>=2.0.0",
+    "pandas>=2.0.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "scikit-image>=0.21.0",
+    "colorama>=0.4.6",
+    "tqdm>=4.66.0",
+    "loguru>=0.7.0",
+    "tenacity>=8.2.0",
+    "click>=8.1.0",
+    "streamlink>=6.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.7.0",
+    "flake8>=6.1.0",
+    "mypy>=1.5.0",
+    "isort>=5.12.0",
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=1.3.0",
+]
+ml = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "ultralytics>=8.0.0",
+]
+
+[project.scripts]
+zelda-ai = "claude_plays_zelda.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/clduab11/claude-plays-zelda"
+Repository = "https://github.com/clduab11/claude-plays-zelda"
+Issues = "https://github.com/clduab11/claude-plays-zelda/issues"
+
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --cov=claude_plays_zelda --cov-report=term-missing --cov-report=html"
+
+[tool.coverage.run]
+source = ["claude_plays_zelda"]
+omit = ["*/tests/*", "*/test_*.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

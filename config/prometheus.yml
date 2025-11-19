@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'zelda-agent'
+    static_configs:
+      - targets: ['zelda-agent:5000']
+    metrics_path: '/api/metrics'
+
+  - job_name: 'dashboard'
+    static_configs:
+      - targets: ['dashboard:5000']
+    metrics_path: '/api/metrics'

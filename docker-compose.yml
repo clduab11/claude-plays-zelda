@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # Main AI agent service
+  zelda-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zelda-agent
+    env_file:
+      - .env
+    environment:
+      - ENABLE_WEB_DASHBOARD=true
+      - DASHBOARD_PORT=5000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - zelda-network
+    restart: unless-stopped
+
+  # Web dashboard (standalone)
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zelda-dashboard
+    command: ["python", "-c", "from claude_plays_zelda.web import WebServer; WebServer().start(); import time; time.sleep(999999)"]
+    env_file:
+      - .env
+    ports:
+      - "5001:5000"
+    networks:
+      - zelda-network
+    restart: unless-stopped
+
+  # PostgreSQL for analytics
+  postgres:
+    image: postgres:15-alpine
+    container_name: zelda-postgres
+    environment:
+      POSTGRES_DB: zelda_analytics
+      POSTGRES_USER: zelda
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-zelda_secret}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - zelda-network
+    restart: unless-stopped
+
+  # Redis for caching and pub/sub
+  redis:
+    image: redis:7-alpine
+    container_name: zelda-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - zelda-network
+    restart: unless-stopped
+
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: zelda-prometheus
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    networks:
+      - zelda-network
+    restart: unless-stopped
+
+  # Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: zelda-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - zelda-network
+    restart: unless-stopped
+
+networks:
+  zelda-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
