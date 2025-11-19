@@ -53,7 +53,7 @@ WORKDIR /app
 COPY --chown=zelda:zelda . .
 
 # Install the package (production install, not editable)
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir --no-deps .
 
 # Create data directories
 RUN mkdir -p data/screenshots data/saves data/logs data/highlights \
