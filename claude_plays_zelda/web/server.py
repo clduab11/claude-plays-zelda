@@ -2,9 +2,9 @@
 
 import threading
 import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 from datetime import datetime
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from loguru import logger
@@ -19,7 +19,9 @@ from .security import (
 )
 
 
-def create_app(config: Dict[str, Any] = None) -> tuple:
+def create_app(
+    config: Optional[Dict[str, Any]] = None,
+) -> Tuple[Flask, SocketIO, AuthenticationManager, RateLimiter]:
     """
     Create Flask application with SocketIO with enhanced security.
 
@@ -37,9 +39,7 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
     """
     config = config or {}
 
-    app = Flask(__name__,
-                template_folder="templates",
-                static_folder="static")
+    app = Flask(__name__, template_folder="templates", static_folder="static")
 
     # Generate secure secret key
     secret_key = config.get("secret_key")
@@ -64,8 +64,7 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
 
     # Configure CORS based on environment
     cors_config = get_cors_config(
-        environment=environment,
-        allowed_origins=config.get("allowed_origins")
+        environment=environment, allowed_origins=config.get("allowed_origins")
     )
     CORS(app, **cors_config)
     logger.info(f"CORS configured for {environment} environment")
@@ -105,23 +104,28 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
         return render_template("dashboard.html")
 
     @app.route("/api/state")
+    @require_auth(auth_manager)
     @apply_rate_limit(rate_limiter)
     def get_state():
         """Get current game state."""
         return jsonify(app.game_state)
 
     @app.route("/api/stats")
+    @require_auth(auth_manager)
     @apply_rate_limit(rate_limiter)
     def get_stats():
         """Get game statistics."""
-        return jsonify({
-            "deaths": app.game_state.get("deaths", 0),
-            "enemies_defeated": app.game_state.get("enemies_defeated", 0),
-            "decisions_made": len(app.game_state.get("decisions", [])),
-            "events_recorded": len(app.game_state.get("events", [])),
-        })
+        return jsonify(
+            {
+                "deaths": app.game_state.get("deaths", 0),
+                "enemies_defeated": app.game_state.get("enemies_defeated", 0),
+                "decisions_made": len(app.game_state.get("decisions", [])),
+                "events_recorded": len(app.game_state.get("events", [])),
+            }
+        )
 
     @app.route("/api/decisions")
+    @require_auth(auth_manager)
     @apply_rate_limit(rate_limiter)
     def get_decisions():
         """Get recent decisions."""
@@ -129,6 +133,7 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
         return jsonify(decisions[-50:])  # Last 50 decisions
 
     @app.route("/api/events")
+    @require_auth(auth_manager)
     @apply_rate_limit(rate_limiter)
     def get_events():
         """Get recent events."""
@@ -138,11 +143,13 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
     @app.route("/health")
     def health():
         """Health check endpoint (no rate limit)."""
-        return jsonify({
-            "status": "healthy",
-            "timestamp": datetime.now().isoformat(),
-            "auth_enabled": auth_manager.enabled
-        })
+        return jsonify(
+            {
+                "status": "healthy",
+                "timestamp": datetime.now().isoformat(),
+                "auth_enabled": auth_manager.enabled,
+            }
+        )
 
     # SocketIO events
     @socketio.on("connect")
@@ -167,7 +174,9 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
 class WebServer:
     """Web server manager for the dashboard."""
 
-    def __init__(self, host: str = "0.0.0.0", port: int = 5000, config: Dict[str, Any] = None):
+    def __init__(
+        self, host: str = "0.0.0.0", port: int = 5000, config: Optional[Dict[str, Any]] = None
+    ):
         """
         Initialize web server with enhanced security.
 
@@ -271,7 +280,9 @@ class WebServer:
 
     def record_enemy_defeated(self, count: int = 1):
         """Record enemies defeated."""
-        self.app.game_state["enemies_defeated"] = self.app.game_state.get("enemies_defeated", 0) + count
+        self.app.game_state["enemies_defeated"] = (
+            self.app.game_state.get("enemies_defeated", 0) + count
+        )
         self.socketio.emit("state_update", self.app.game_state)
 
     def set_objective(self, objective: str):

@@ -3,7 +3,6 @@
 import os
 from pathlib import Path
 from typing import Any, Optional, List, Dict
-from pydantic import field_validator, ValidationInfo
 from loguru import logger
 
 
@@ -29,9 +28,7 @@ class ConfigValidators:
             raise ValueError(f"{key_name} must be a non-empty string")
 
         if len(key) < 10:
-            raise ValueError(
-                f"{key_name} appears too short (minimum 10 characters)"
-            )
+            raise ValueError(f"{key_name} appears too short (minimum 10 characters)")
 
         # Check for common placeholders
         placeholders = [
@@ -43,8 +40,7 @@ class ConfigValidators:
         ]
         if any(placeholder.lower() in key.lower() for placeholder in placeholders):
             raise ValueError(
-                f"{key_name} appears to be a placeholder value. "
-                "Please set a valid API key."
+                f"{key_name} appears to be a placeholder value. " "Please set a valid API key."
             )
 
         logger.debug(f"{key_name} validated successfully")
@@ -114,15 +110,12 @@ class ConfigValidators:
             raise ValueError("Port must be an integer")
 
         if port < 1 or port > 65535:
-            raise ValueError(
-                f"Port must be between 1 and 65535, got {port}"
-            )
+            raise ValueError(f"Port must be between 1 and 65535, got {port}")
 
         # Warn about privileged ports
         if port < 1024:
             logger.warning(
-                f"Port {port} is a privileged port and may require "
-                "elevated permissions"
+                f"Port {port} is a privileged port and may require " "elevated permissions"
             )
 
         return port
@@ -156,14 +149,10 @@ class ConfigValidators:
             raise ValueError(f"{name} must be positive, got {value}")
 
         if min_value is not None and value <= min_value:
-            raise ValueError(
-                f"{name} must be greater than {min_value}, got {value}"
-            )
+            raise ValueError(f"{name} must be greater than {min_value}, got {value}")
 
         if max_value is not None and value >= max_value:
-            raise ValueError(
-                f"{name} must be less than {max_value}, got {value}"
-            )
+            raise ValueError(f"{name} must be less than {max_value}, got {value}")
 
         return value
 
@@ -186,9 +175,7 @@ class ConfigValidators:
             raise ValueError("Model name must be a non-empty string")
 
         if model not in valid_models:
-            raise ValueError(
-                f"Invalid model '{model}'. Valid models: {', '.join(valid_models)}"
-            )
+            raise ValueError(f"Invalid model '{model}'. Valid models: {', '.join(valid_models)}")
 
         return model
 
@@ -211,8 +198,7 @@ class ConfigValidators:
         level = level.upper()
         if level not in valid_levels:
             raise ValueError(
-                f"Invalid log level '{level}'. "
-                f"Valid levels: {', '.join(valid_levels)}"
+                f"Invalid log level '{level}'. " f"Valid levels: {', '.join(valid_levels)}"
             )
 
         return level
@@ -243,14 +229,10 @@ class ConfigValidators:
             raise ValueError(f"{name} must be a number")
 
         if interval < min_seconds:
-            raise ValueError(
-                f"{name} must be at least {min_seconds} seconds, got {interval}"
-            )
+            raise ValueError(f"{name} must be at least {min_seconds} seconds, got {interval}")
 
         if interval > max_seconds:
-            raise ValueError(
-                f"{name} must be at most {max_seconds} seconds, got {interval}"
-            )
+            raise ValueError(f"{name} must be at most {max_seconds} seconds, got {interval}")
 
         return interval
 
@@ -278,16 +260,12 @@ class ConfigValidators:
 
         if value is None:
             if required and default is None:
-                raise ValueError(
-                    f"Required environment variable '{var_name}' is not set"
-                )
+                raise ValueError(f"Required environment variable '{var_name}' is not set")
             return default
 
         if not value.strip():
             if required:
-                raise ValueError(
-                    f"Environment variable '{var_name}' is empty"
-                )
+                raise ValueError(f"Environment variable '{var_name}' is empty")
             return default
 
         return value
@@ -353,9 +331,7 @@ class ConfigValidators:
         if "ocr" in config and "confidence_threshold" in config["ocr"]:
             threshold = config["ocr"]["confidence_threshold"]
             if not 0 <= threshold <= 100:
-                raise ValueError(
-                    f"OCR confidence threshold must be 0-100, got {threshold}"
-                )
+                raise ValueError(f"OCR confidence threshold must be 0-100, got {threshold}")
 
         if "object_detection" in config:
             obj_config = config["object_detection"]
@@ -363,18 +339,13 @@ class ConfigValidators:
                 if key in obj_config:
                     value = obj_config[key]
                     if not 0 <= value <= 1:
-                        raise ValueError(
-                            f"Object detection {key} must be 0-1, got {value}"
-                        )
+                        raise ValueError(f"Object detection {key} must be 0-1, got {value}")
 
         # Validate screen capture interval
         if "screen_capture" in config and "interval" in config["screen_capture"]:
             interval = config["screen_capture"]["interval"]
             ConfigValidators.validate_interval(
-                interval,
-                name="screen capture interval",
-                min_seconds=0.01,
-                max_seconds=10.0
+                interval, name="screen capture interval", min_seconds=0.01, max_seconds=10.0
             )
 
         return config
@@ -399,7 +370,7 @@ class ConfigValidators:
                 config["decision_interval"],
                 name="decision interval",
                 min_seconds=0.1,
-                max_seconds=60.0
+                max_seconds=60.0,
             )
 
         # Validate memory settings
@@ -408,9 +379,7 @@ class ConfigValidators:
             if "max_history" in mem_config:
                 max_history = mem_config["max_history"]
                 if not isinstance(max_history, int) or max_history < 1:
-                    raise ValueError(
-                        f"max_history must be positive integer, got {max_history}"
-                    )
+                    raise ValueError(f"max_history must be positive integer, got {max_history}")
 
         # Validate context settings
         if "context" in config:
@@ -418,8 +387,6 @@ class ConfigValidators:
             if "max_tokens" in ctx_config:
                 max_tokens = ctx_config["max_tokens"]
                 if not isinstance(max_tokens, int) or max_tokens < 1000:
-                    raise ValueError(
-                        f"max_tokens must be at least 1000, got {max_tokens}"
-                    )
+                    raise ValueError(f"max_tokens must be at least 1000, got {max_tokens}")
 
         return config

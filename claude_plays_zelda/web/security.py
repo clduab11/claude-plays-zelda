@@ -3,9 +3,8 @@
 import secrets
 import time
 from functools import wraps
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, List, Tuple
 from collections import defaultdict
-from datetime import datetime, timedelta
 from flask import request, jsonify
 from loguru import logger
 
@@ -31,11 +30,10 @@ class RateLimiter:
         self.hour_requests: Dict[str, list] = defaultdict(list)
 
         logger.info(
-            f"Rate limiter initialized: {requests_per_minute}/min, "
-            f"{requests_per_hour}/hour"
+            f"Rate limiter initialized: {requests_per_minute}/min, " f"{requests_per_hour}/hour"
         )
 
-    def is_rate_limited(self, ip_address: str) -> tuple[bool, Optional[str]]:
+    def is_rate_limited(self, ip_address: str) -> Tuple[bool, Optional[str]]:
         """
         Check if IP address is rate limited.
 
@@ -53,16 +51,20 @@ class RateLimiter:
         self.minute_requests[ip_address] = [
             t for t in self.minute_requests[ip_address] if t > minute_ago
         ]
-        self.hour_requests[ip_address] = [
-            t for t in self.hour_requests[ip_address] if t > hour_ago
-        ]
+        self.hour_requests[ip_address] = [t for t in self.hour_requests[ip_address] if t > hour_ago]
+
+        # Remove IPs with no recent requests to prevent memory leak
+        if not self.minute_requests[ip_address]:
+            del self.minute_requests[ip_address]
+        if not self.hour_requests[ip_address]:
+            del self.hour_requests[ip_address]
 
         # Check minute limit
-        if len(self.minute_requests[ip_address]) >= self.requests_per_minute:
+        if len(self.minute_requests.get(ip_address, [])) >= self.requests_per_minute:
             return True, "Rate limit exceeded: too many requests per minute"
 
         # Check hour limit
-        if len(self.hour_requests[ip_address]) >= self.requests_per_hour:
+        if len(self.hour_requests.get(ip_address, [])) >= self.requests_per_hour:
             return True, "Rate limit exceeded: too many requests per hour"
 
         # Record request
@@ -89,7 +91,7 @@ class RateLimiter:
 class AuthenticationManager:
     """Simple token-based authentication manager."""
 
-    def __init__(self, api_keys: Optional[list[str]] = None):
+    def __init__(self, api_keys: Optional[List[str]] = None):
         """
         Initialize authentication manager.
 
@@ -173,6 +175,7 @@ def require_auth(auth_manager: AuthenticationManager):
     Returns:
         Decorated function
     """
+
     def decorator(f: Callable):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -182,16 +185,13 @@ def require_auth(auth_manager: AuthenticationManager):
             token = auth_manager.get_token_from_request()
 
             if not auth_manager.is_authenticated(token):
-                logger.warning(
-                    f"Unauthorized access attempt from {request.remote_addr}"
-                )
-                return jsonify({
-                    "error": "Unauthorized",
-                    "message": "Valid API key required"
-                }), 401
+                logger.warning(f"Unauthorized access attempt from {request.remote_addr}")
+                return jsonify({"error": "Unauthorized", "message": "Valid API key required"}), 401
 
             return f(*args, **kwargs)
+
         return decorated_function
+
     return decorator
 
 
@@ -205,6 +205,7 @@ def apply_rate_limit(rate_limiter: RateLimiter):
     Returns:
         Decorated function
     """
+
     def decorator(f: Callable):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -213,20 +214,18 @@ def apply_rate_limit(rate_limiter: RateLimiter):
 
             if is_limited:
                 logger.warning(f"Rate limit exceeded for {ip_address}: {reason}")
-                return jsonify({
-                    "error": "Rate limit exceeded",
-                    "message": reason
-                }), 429
+                return jsonify({"error": "Rate limit exceeded", "message": reason}), 429
 
             return f(*args, **kwargs)
+
         return decorated_function
+
     return decorator
 
 
 def get_cors_config(
-    environment: str = "production",
-    allowed_origins: Optional[list[str]] = None
-) -> dict:
+    environment: str = "production", allowed_origins: Optional[List[str]] = None
+) -> Dict:
     """
     Get CORS configuration based on environment.
 
@@ -259,7 +258,7 @@ def get_cors_config(
     }
 
 
-def validate_input(data: dict, required_fields: list[str]) -> tuple[bool, Optional[str]]:
+def validate_input(data: Dict, required_fields: List[str]) -> Tuple[bool, Optional[str]]:
     """
     Validate input data has required fields.
 

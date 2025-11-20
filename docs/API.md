@@ -600,5 +600,5 @@ See `/examples` directory for complete usage examples:
 ## Support
 
 For issues and questions:
-- GitHub Issues: https://github.com/yourusername/claude-plays-zelda/issues
-- Documentation: https://docs.example.com
+- GitHub Issues: https://github.com/clduab11/claude-plays-zelda/issues
+- GitHub Repository: https://github.com/clduab11/claude-plays-zelda

@@ -297,7 +297,7 @@ if not is_valid:
 If you discover a security vulnerability:
 
 1. **DO NOT** open a public GitHub issue
-2. **DO** email security concerns to: [security@example.com]
+2. **DO** report via [GitHub Security Advisories](https://github.com/clduab11/claude-plays-zelda/security/advisories)
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
@@ -401,9 +401,9 @@ updates:
 
 ## Security Contacts
 
-- **Security Issues**: [security@example.com]
+- **Security Issues**: [GitHub Security Advisories](https://github.com/clduab11/claude-plays-zelda/security/advisories)
 - **Project Maintainers**: [See CONTRIBUTING.md]
-- **Security Advisories**: [GitHub Security Advisories]
+- **General Issues**: [GitHub Issues](https://github.com/clduab11/claude-plays-zelda/issues)
 
 ---
 
