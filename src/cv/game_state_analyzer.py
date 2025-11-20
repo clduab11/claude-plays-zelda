@@ -108,17 +108,19 @@ class GameStateAnalyzer:
         try:
             height, width = image.shape[:2]
             
-            # Hearts are typically in top-left
-            hearts_region = image[int(height*0.05):int(height*0.15), int(width*0.05):int(width*0.3)]
+            # NES HUD is the top ~25% of the screen
+            # Hearts are in the middle-right of the HUD
+            hearts_region = image[int(height*0.15):int(height*0.25), int(width*0.6):int(width*0.9)]
             hearts = self._count_hearts(hearts_region)
             info["health"] = hearts.get("current", 0)
             info["max_health"] = hearts.get("max", 0)
             
-            # Rupees/items are typically in top-right
-            items_region = image[int(height*0.05):int(height*0.15), int(width*0.7):int(width*0.95)]
+            # Rupees/Keys/Bombs are in the middle-left of the HUD
+            items_region = image[int(height*0.15):int(height*0.25), int(width*0.2):int(width*0.5)]
             numbers = self.ocr_engine.detect_numbers(items_region)
             if numbers:
                 info["rupees"] = numbers[0] if len(numbers) > 0 else 0
+                # Note: NES HUD has specific slots for Keys/Bombs, would need precise coordinates
             
             return info
         except Exception as e:
@@ -195,9 +197,10 @@ class GameStateAnalyzer:
             # Link typically wears green - detect green blob in center area
             hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             
-            # Green color range for Link's tunic
-            lower_green = np.array([35, 50, 50])
-            upper_green = np.array([85, 255, 255])
+            # NES Link is a distinct green/brown
+            # Green color range for Link's tunic (NES palette is simpler)
+            lower_green = np.array([40, 100, 100])
+            upper_green = np.array([80, 255, 255])
             mask = cv2.inRange(hsv, lower_green, upper_green)
             
             # Find contours

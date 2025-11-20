@@ -1,16 +1,16 @@
 # Claude AI Configuration
 claude:
   api_key: ${ANTHROPIC_API_KEY}  # Set via environment variable
-  model: claude-3-5-sonnet-20241022
+  model: ${CLAUDE_MODEL}  # Uses claude-sonnet-4-5-20250929 from .env
   max_tokens: 4096
   temperature: 0.7
 
 # Emulator Configuration
 emulator:
-  type: snes9x
-  executable_path: snes9x  # Path to SNES9x executable
-  rom_path: zelda_alttp.smc  # Path to Zelda: A Link to the Past ROM
-  window_name: Snes9x
+  type: fceux
+  executable_path: fceux  # Path to NES emulator
+  rom_path: zelda_nes.nes  # Path to Legend of Zelda (1986) ROM
+  window_name: FCEUX
   fps: 60
   save_state_dir: save_states
 
@@ -24,7 +24,7 @@ cv:
     nms_threshold: 0.4
   screen_capture:
     interval: 0.1  # seconds between captures
-    resolution: [256, 224]  # SNES resolution
+    resolution: [256, 240]  # NES resolution
 
 # AI Agent Configuration
 agent:

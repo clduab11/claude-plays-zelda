@@ -20,12 +20,8 @@ class GameButton(Enum):
     DOWN = "down"
     LEFT = "left"
     RIGHT = "right"
-    A = "a"
-    B = "b"
-    X = "x"
-    Y = "y"
-    L = "l"
-    R = "r"
+    A = "a"      # Sword
+    B = "b"      # Item
     START = "return"
     SELECT = "shift"
 
@@ -125,20 +121,18 @@ class InputController:
         self.press_button(direction, duration)
 
     def attack(self) -> None:
-        """Perform an attack (B button)."""
-        self.tap_button(GameButton.B)
+        """Perform an attack (A button - Sword)."""
+        self.tap_button(GameButton.A)
 
     def use_item(self) -> None:
-        """Use equipped item (Y button)."""
-        self.tap_button(GameButton.Y)
+        """Use equipped item (B button)."""
+        self.tap_button(GameButton.B)
 
     def open_menu(self) -> None:
         """Open the game menu (START button)."""
         self.tap_button(GameButton.START)
 
-    def dash_attack(self) -> None:
-        """Perform a dash attack (hold B)."""
-        self.hold_button(GameButton.B, duration=0.5)
+    # dash_attack removed as it is not present in NES Zelda
 
     def combo_move(self, buttons: List[GameButton], delays: Optional[List[float]] = None) -> None:
         """

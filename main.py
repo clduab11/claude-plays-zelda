@@ -11,7 +11,11 @@ from src.emulator import EmulatorInterface, InputController, ScreenCapture
 from src.cv import GameStateAnalyzer
 from src.agent import ClaudeClient, ContextManager, ActionPlanner, MemorySystem
 from src.game import CombatAI, PuzzleSolver, Navigator
-from src.streaming import Dashboard, StatsTracker
+from src.agent import ClaudeClient, ContextManager, ActionPlanner, MemorySystem
+from src.game import CombatAI, PuzzleSolver, Navigator
+from src.streaming import Dashboard, StatsTracker, TwitchBot
+import threading
+import asyncio
 
 
 class ClaudeZeldaAI:
@@ -30,6 +34,10 @@ class ClaudeZeldaAI:
         
         # Load environment variables
         load_dotenv()
+        
+        # Override config with environment variables
+        if os.getenv('ENABLE_WEB_DASHBOARD', '').lower() == 'true':
+            self.config['streaming']['enabled'] = True
         
         # Setup logging
         self._setup_logging()
@@ -99,6 +107,9 @@ class ClaudeZeldaAI:
                 port=self.config['streaming']['dashboard']['port'],
                 enable_cors=self.config['streaming']['dashboard']['enable_cors']
             )
+            
+        self.twitch_bot = TwitchBot()
+        self.bot_thread = None
         
         self.running = False
         self.decision_interval = self.config['agent']['decision_interval']
@@ -126,6 +137,16 @@ class ClaudeZeldaAI:
             rotation="10 MB"
         )
 
+    def _run_twitch_bot(self):
+        """Run Twitch bot in a separate loop."""
+        if self.twitch_bot.enabled:
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(self.twitch_bot.start_bot())
+            except Exception as e:
+                logger.error(f"Twitch bot thread error: {e}")
+
     def start(self):
         """Start the AI system."""
         logger.info("Starting Claude Plays Zelda AI")
@@ -133,6 +154,12 @@ class ClaudeZeldaAI:
         # Start dashboard if enabled
         if self.dashboard:
             self.dashboard.start()
+            
+        # Start Twitch Bot
+        if self.twitch_bot.enabled:
+            self.bot_thread = threading.Thread(target=self._run_twitch_bot, daemon=True)
+            self.bot_thread.start()
+            logger.info("Twitch bot thread started")
         
         # Start emulator
         if not self.emulator.start():
@@ -148,15 +175,20 @@ class ClaudeZeldaAI:
         self.running = True
         logger.info("AI system started successfully")
         
-        # Main game loop
-        try:
-            self.game_loop()
-        except KeyboardInterrupt:
-            logger.info("Received interrupt signal")
-        except Exception as e:
-            logger.error(f"Error in game loop: {e}")
-        finally:
-            self.stop()
+        # Main game loop with retry mechanism
+        while self.running:
+            try:
+                self.game_loop()
+            except KeyboardInterrupt:
+                logger.info("Received interrupt signal")
+                self.running = False
+                break
+            except Exception as e:
+                logger.error(f"Error in game loop: {e}")
+                logger.info("Restarting game loop in 5 seconds...")
+                time.sleep(5)
+        
+        self.stop()
 
     def game_loop(self):
         """Main game loop."""
@@ -167,6 +199,20 @@ class ClaudeZeldaAI:
         while self.running:
             current_time = time.time()
             
+            # Watchdog: Check if emulator is running
+            if not self.emulator.is_running():
+                logger.warning("Emulator process died, attempting to restart...")
+                if self.emulator.start():
+                    logger.info("Emulator restarted successfully")
+                    # Give it a moment to initialize
+                    time.sleep(2)
+                    # Reload memory/state if needed
+                    self.memory_system.load()
+                else:
+                    logger.error("Failed to restart emulator")
+                    time.sleep(5)
+                    continue
+
             # Capture screen
             screen = self.screen_capture.capture_screen()
             if screen is None:
@@ -187,6 +233,15 @@ class ClaudeZeldaAI:
                     "location": game_state.location.region if game_state.location else "Unknown",
                     "enemies": len(game_state.enemies_visible),
                     "items": len(game_state.items_visible),
+                })
+                
+            # Update Twitch Bot
+            if self.twitch_bot.enabled:
+                self.twitch_bot.update_game_state({
+                    "health": game_state.health,
+                    "max_health": game_state.max_health,
+                    "rupees": game_state.rupees,
+                    "location": game_state.location.region if game_state.location else "Unknown"
                 })
             
             # Make decision at intervals
@@ -225,6 +280,11 @@ class ClaudeZeldaAI:
                     # Update dashboard
                     if self.dashboard:
                         self.dashboard.log_action(parsed_action['action'])
+                        
+                    # Notify Twitch Chat
+                    if self.twitch_bot.enabled and success:
+                        # Optional: Announce significant actions
+                        pass
                 
                 last_decision_time = current_time
             

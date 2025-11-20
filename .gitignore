@@ -54,6 +54,7 @@ data/highlights/
 *.srm
 *.fig
 *.fst
+*.nes
 
 # Config files with sensitive data
 config.json

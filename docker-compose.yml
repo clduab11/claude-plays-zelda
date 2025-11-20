@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Main AI agent service
@@ -25,20 +25,20 @@ services:
       - zelda-network
     restart: unless-stopped
 
-  # Web dashboard (standalone)
-  dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: zelda-dashboard
-    command: ["python", "-c", "from claude_plays_zelda.web import WebServer; WebServer().start(); import time; time.sleep(999999)"]
-    env_file:
-      - .env
-    ports:
-      - "5001:5000"
-    networks:
-      - zelda-network
-    restart: unless-stopped
+  # Web dashboard is integrated into zelda-agent
+  # dashboard:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: zelda-dashboard
+  #   command: ["python", "-c", "from claude_plays_zelda.web import WebServer; WebServer().start(); import time; time.sleep(999999)"]
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - "5001:5000"
+  #   networks:
+  #     - zelda-network
+  #   restart: unless-stopped
 
   # PostgreSQL for analytics
   postgres:
@@ -78,9 +78,9 @@ services:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
     ports:
       - "9090:9090"
     networks:

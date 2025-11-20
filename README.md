@@ -21,7 +21,7 @@
 
 ## 🎥 Demo
 
-*(Coming soon - AI gameplay videos)*
+_(Coming soon - AI gameplay videos)_
 
 ## 📋 Quick Start
 
@@ -41,7 +41,7 @@ nano .env
 zelda-ai play --emulator-path /path/to/snes9x --rom-path /path/to/zelda.smc
 ```
 
-📖 **[Full Setup Guide](SETUP_GUIDE.md)** for detailed instructions.
+📖 **[Full Setup Guide](docs/SETUP_GUIDE.md)** for detailed instructions.
 
 ## 🔧 Requirements
 
@@ -81,13 +81,24 @@ zelda-ai play --emulator-path /path/to/snes9x --rom-path /path/to/zelda.smc
 
 ### Core Components
 
-| Module | Description |
-|--------|-------------|
-| **Emulator Integration** | Screen capture, input control, process management |
-| **Computer Vision** | OCR, object detection, state analysis, map recognition |
-| **AI Agent** | Claude API integration, decision-making, context management |
-| **Game Logic** | Combat strategies, dungeon navigation, puzzle solving |
-| **Memory System** | Progress tracking, learned strategies, statistics |
+| Module                   | Description                                                 |
+| ------------------------ | ----------------------------------------------------------- |
+| **Emulator Integration** | Screen capture, input control, process management           |
+| **Computer Vision**      | OCR, object detection, state analysis, map recognition      |
+| **AI Agent**             | Claude API integration, decision-making, context management |
+| **Game Logic**           | Combat strategies, dungeon navigation, puzzle solving       |
+| **Memory System**        | Progress tracking, learned strategies, statistics           |
+| **Reasoning Engine**     | High-level planning, chain-of-thought reflection (SIMA 2)   |
+| **Multimodal Interface** | Visual goal understanding, sketch parsing (SIMA 2)          |
+| **Strategy Bank**        | Self-improvement via learned strategies (SIMA 2)            |
+
+### SIMA 2 Integration (New!)
+
+Inspired by Google DeepMind's SIMA 2, this agent is evolving to "play, reason, and learn":
+
+1.  **Reasoning**: Uses Chain-of-Thought to plan complex sequences before acting.
+2.  **Multimodal**: Can understand goals from images (e.g., "Go to this location" from a screenshot).
+3.  **Self-Improvement**: Learns from its own gameplay, storing successful strategies in a `StrategyBank`.
 
 ## 💻 Usage Examples
 
@@ -141,24 +152,28 @@ orchestrator.stop()
 ## 🎯 What the AI Can Do
 
 ✅ **Exploration**
+
 - Navigate the overworld
 - Enter buildings and caves
 - Track visited locations
 - Discover secrets
 
 ✅ **Combat**
+
 - Engage enemies strategically
 - Learn attack patterns
 - Use different weapons
 - Manage health
 
 ✅ **Progression**
+
 - Complete dungeons
 - Solve puzzles
 - Talk to NPCs
 - Collect items
 
 ✅ **Learning**
+
 - Remember strategies
 - Learn from deaths
 - Track progress
@@ -189,6 +204,7 @@ Statistics are saved in `data/saves/agent_memory.json` and automatically updated
 **You MUST legally own The Legend of Zelda (1986) to use this software.**
 
 Legal ways to obtain a ROM:
+
 - Dump from your own NES cartridge
 - Purchase digital copy (e.g., Nintendo Switch Online)
 - Extract from legally purchased compilation
@@ -198,11 +214,12 @@ Legal ways to obtain a ROM:
 ### Fair Use
 
 This is an educational and research project demonstrating:
+
 - AI decision-making in complex environments
 - Computer vision applications in gaming
 - Reinforcement learning concepts
 
-*The Legend of Zelda is a registered trademark of Nintendo. This project is not affiliated with or endorsed by Nintendo.*
+_The Legend of Zelda is a registered trademark of Nintendo. This project is not affiliated with or endorsed by Nintendo._
 
 ## 🤝 Contributing
 
@@ -227,18 +244,20 @@ mypy claude_plays_zelda/
 
 ## 🐛 Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| "Window not found" | Check `WINDOW_TITLE` matches emulator window |
-| "API key invalid" | Verify key in `.env` file |
-| "Tesseract not found" | Install Tesseract OCR and add to PATH |
-| Screen capture fails | Grant screen recording permissions (macOS) |
+| Issue                 | Solution                                     |
+| --------------------- | -------------------------------------------- |
+| "Window not found"    | Check `WINDOW_TITLE` matches emulator window |
+| "API key invalid"     | Verify key in `.env` file                    |
+| "Tesseract not found" | Install Tesseract OCR and add to PATH        |
+| Screen capture fails  | Grant screen recording permissions (macOS)   |
 
-📖 See [SETUP_GUIDE.md](SETUP_GUIDE.md) for detailed troubleshooting.
+📖 See [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md) for detailed troubleshooting.
 
 ## 📚 Documentation
 
-- **[Setup Guide](SETUP_GUIDE.md)** - Installation and configuration
+- **[Setup Guide](docs/SETUP_GUIDE.md)** - Installation and configuration
+- **[Project Summary](docs/PROJECT_SUMMARY.md)** - Detailed technical overview
+- **[Quick Start](docs/QUICKSTART.md)** - Get started in 5 minutes
 - **[API Documentation](docs/)** - Code reference (coming soon)
 - **[Architecture](docs/ARCHITECTURE.md)** - System design (coming soon)
 - **[Contributing](CONTRIBUTING.md)** - Development guide (coming soon)
@@ -246,8 +265,12 @@ mypy claude_plays_zelda/
 ## 🚧 Roadmap
 
 - [ ] Web dashboard for real-time monitoring
-- [ ] Twitch streaming integration
+- [x] Twitch streaming integration
 - [ ] Deep learning models for improved vision
+- [ ] Support for other Zelda games
+- [ ] SIMA 2: Full implementation of Reasoning Engine
+- [ ] SIMA 2: Full implementation of Multimodal Interface
+- [ ] SIMA 2: Full implementation of Self-Improvement Loop
 - [ ] Support for other Zelda games
 - [ ] Reinforcement learning optimizations
 - [ ] Voice commentary generation

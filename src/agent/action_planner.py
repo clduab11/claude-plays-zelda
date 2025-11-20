@@ -20,8 +20,8 @@ class ActionType(Enum):
     TALK = "talk"
     SEARCH = "search"
     WAIT = "wait"
-    DASH = "dash"
     COMBO = "combo"
+    PRESS_BUTTONS = "press_buttons"
 
 
 @dataclass
@@ -84,7 +84,8 @@ class ActionPlanner:
             "search": ActionType.SEARCH,
             "look": ActionType.SEARCH,
             "wait": ActionType.WAIT,
-            "dash": ActionType.DASH,
+            "look": ActionType.SEARCH,
+            "wait": ActionType.WAIT,
         }
         
         for key, action_type in action_map.items():
@@ -125,10 +126,33 @@ class ActionPlanner:
                 self.input_controller.tap_button(GameButton.A)
             elif action.action_type == ActionType.SEARCH:
                 self.input_controller.tap_button(GameButton.A)
-            elif action.action_type == ActionType.DASH:
-                self.input_controller.dash_attack()
+            elif action.action_type == ActionType.SEARCH:
+                self.input_controller.tap_button(GameButton.A)
             elif action.action_type == ActionType.WAIT:
                 self.input_controller.wait(action.duration)
+            elif action.action_type == ActionType.PRESS_BUTTONS:
+                buttons = action.parameters.get("buttons", [])
+                if buttons:
+                    # Convert string buttons to GameButton enum if needed
+                    game_buttons = []
+                    for b in buttons:
+                        if isinstance(b, str):
+                            # Map string to GameButton
+                            btn_map = {
+                                "A": GameButton.A, "B": GameButton.B,
+                                "START": GameButton.START, "SELECT": GameButton.SELECT,
+                                "UP": GameButton.UP, "DOWN": GameButton.DOWN,
+                                "LEFT": GameButton.LEFT, "RIGHT": GameButton.RIGHT
+                            }
+                            if b.upper() in btn_map:
+                                game_buttons.append(btn_map[b.upper()])
+                        elif isinstance(b, GameButton):
+                            game_buttons.append(b)
+                    
+                    if game_buttons:
+                        # Create delays list based on duration
+                        delays = [action.duration] * len(game_buttons)
+                        self.input_controller.combo_move(game_buttons, delays)
             else:
                 logger.warning(f"Unhandled action type: {action.action_type}")
                 return False

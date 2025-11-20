@@ -2,5 +2,6 @@
 
 from .dashboard import Dashboard
 from .stats_tracker import StatsTracker
+from .twitch_bot import TwitchBot
 
-__all__ = ["Dashboard", "StatsTracker"]
+__all__ = ["Dashboard", "StatsTracker", "TwitchBot"]

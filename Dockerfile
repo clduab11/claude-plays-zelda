@@ -37,6 +37,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Tesseract OCR
     tesseract-ocr \
     tesseract-ocr-eng \
+    # NES Emulator
+    fceux \
+    # X11 / Headless support
+    xvfb \
+    x11-utils \
     # Cleanup
     && rm -rf /var/lib/apt/lists/*
 
@@ -72,4 +77,5 @@ EXPOSE 5000
 #     CMD python -c "import requests; requests.get('http://localhost:5000/health')" || exit 1
 
 # Default command
-CMD ["python", "-m", "claude_plays_zelda.cli", "play"]
+# Default command with Xvfb for headless execution
+CMD ["xvfb-run", "--auto-servernum", "--server-args='-screen 0 1024x768x24'", "python", "main.py"]

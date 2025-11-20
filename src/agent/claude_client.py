@@ -8,7 +8,7 @@ from loguru import logger
 class ClaudeClient:
     """Client for interacting with Claude API."""
 
-    def __init__(self, api_key: str, model: str = "claude-3-5-sonnet-20241022", 
+    def __init__(self, api_key: str, model: str = "claude-sonnet-4-5-20250929", 
                  max_tokens: int = 4096, temperature: float = 0.7):
         """
         Initialize the Claude client.
@@ -25,31 +25,56 @@ class ClaudeClient:
         self.temperature = temperature
         self.client = Anthropic(api_key=api_key)
 
-    def get_action(self, game_state: str, context: Optional[str] = None) -> str:
+    def get_action(self, game_state: str, context: Optional[str] = None, 
+                   image_data: Optional[str] = None) -> str:
         """
         Get the next action from Claude based on game state.
 
         Args:
             game_state: Current game state description
             context: Optional additional context
+            image_data: Optional base64 encoded image
 
         Returns:
             Action string from Claude
         """
         try:
             system_prompt = self._build_system_prompt()
-            user_message = self._build_user_message(game_state, context)
+            user_message_text = self._build_user_message(game_state, context)
             
             logger.debug(f"Requesting action from Claude")
+            
+            if image_data:
+                messages = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/png",  # Assuming PNG, could be parameterized
+                                    "data": image_data
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": user_message_text
+                            }
+                        ]
+                    }
+                ]
+            else:
+                messages = [
+                    {"role": "user", "content": user_message_text}
+                ]
             
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
                 system=system_prompt,
-                messages=[
-                    {"role": "user", "content": user_message}
-                ]
+                messages=messages
             )
             
             action = response.content[0].text
