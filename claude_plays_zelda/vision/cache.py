@@ -261,13 +261,16 @@ class ImageComparator:
     @staticmethod
     def compute_hash(image: np.ndarray) -> str:
         """
-        Compute perceptual hash of image.
+        Compute a cryptographic hash of the image's raw byte content.
+
+        Note: This is not a perceptual hash. Any minor change to the image
+        will result in a completely different hash.
 
         Args:
             image: Input image
 
         Returns:
-            Hash string
+            MD5 hash string
         """
         return hashlib.md5(image.tobytes()).hexdigest()
 
