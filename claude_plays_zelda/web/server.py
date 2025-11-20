@@ -1,36 +1,84 @@
 """Flask web server with SocketIO for real-time dashboard."""
 
 import threading
+import os
 from typing import Dict, Any, Optional
 from datetime import datetime
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 from loguru import logger
 
+from .security import (
+    RateLimiter,
+    AuthenticationManager,
+    generate_secret_key,
+    require_auth,
+    apply_rate_limit,
+    get_cors_config,
+)
+
 
 def create_app(config: Dict[str, Any] = None) -> tuple:
     """
-    Create Flask application with SocketIO.
+    Create Flask application with SocketIO with enhanced security.
 
     Args:
-        config: Application configuration
+        config: Application configuration containing:
+            - secret_key: Flask secret key (generated if not provided)
+            - api_keys: List of valid API keys for authentication
+            - environment: 'development' or 'production'
+            - allowed_origins: List of allowed CORS origins
+            - rate_limit_per_minute: Rate limit per minute (default: 60)
+            - rate_limit_per_hour: Rate limit per hour (default: 1000)
 
     Returns:
-        Tuple of (app, socketio)
+        Tuple of (app, socketio, auth_manager, rate_limiter)
     """
+    config = config or {}
+
     app = Flask(__name__,
                 template_folder="templates",
                 static_folder="static")
 
-    # Configure app
-    app.config["SECRET_KEY"] = config.get("secret_key", "zelda-ai-secret") if config else "zelda-ai-secret"
+    # Generate secure secret key
+    secret_key = config.get("secret_key")
+    if not secret_key:
+        secret_key = os.environ.get("FLASK_SECRET_KEY")
+        if not secret_key:
+            secret_key = generate_secret_key()
+            logger.warning(
+                "No secret key provided, generated temporary key. "
+                "Set FLASK_SECRET_KEY environment variable for production!"
+            )
 
-    # Enable CORS
-    CORS(app)
+    app.config["SECRET_KEY"] = secret_key
 
-    # Initialize SocketIO
-    socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+    # Initialize security components
+    environment = config.get("environment", "production")
+    auth_manager = AuthenticationManager(api_keys=config.get("api_keys"))
+    rate_limiter = RateLimiter(
+        requests_per_minute=config.get("rate_limit_per_minute", 60),
+        requests_per_hour=config.get("rate_limit_per_hour", 1000),
+    )
+
+    # Configure CORS based on environment
+    cors_config = get_cors_config(
+        environment=environment,
+        allowed_origins=config.get("allowed_origins")
+    )
+    CORS(app, **cors_config)
+    logger.info(f"CORS configured for {environment} environment")
+
+    # Initialize SocketIO with security
+    socketio_origins = cors_config["origins"]
+    socketio = SocketIO(
+        app,
+        cors_allowed_origins=socketio_origins,
+        async_mode="threading",
+        ping_timeout=60,
+        ping_interval=25,
+    )
 
     # Store for game state
     app.game_state = {
@@ -46,6 +94,10 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
         "is_running": False,
     }
 
+    # Store security components for use in routes
+    app.auth_manager = auth_manager
+    app.rate_limiter = rate_limiter
+
     # Routes
     @app.route("/")
     def index():
@@ -53,11 +105,13 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
         return render_template("dashboard.html")
 
     @app.route("/api/state")
+    @apply_rate_limit(rate_limiter)
     def get_state():
         """Get current game state."""
         return jsonify(app.game_state)
 
     @app.route("/api/stats")
+    @apply_rate_limit(rate_limiter)
     def get_stats():
         """Get game statistics."""
         return jsonify({
@@ -68,12 +122,14 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
         })
 
     @app.route("/api/decisions")
+    @apply_rate_limit(rate_limiter)
     def get_decisions():
         """Get recent decisions."""
         decisions = app.game_state.get("decisions", [])
         return jsonify(decisions[-50:])  # Last 50 decisions
 
     @app.route("/api/events")
+    @apply_rate_limit(rate_limiter)
     def get_events():
         """Get recent events."""
         events = app.game_state.get("events", [])
@@ -81,8 +137,12 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
 
     @app.route("/health")
     def health():
-        """Health check endpoint."""
-        return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
+        """Health check endpoint (no rate limit)."""
+        return jsonify({
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "auth_enabled": auth_manager.enabled
+        })
 
     # SocketIO events
     @socketio.on("connect")
@@ -101,7 +161,7 @@ def create_app(config: Dict[str, Any] = None) -> tuple:
         """Handle state request."""
         emit("state_update", app.game_state)
 
-    return app, socketio
+    return app, socketio, auth_manager, rate_limiter
 
 
 class WebServer:
@@ -109,20 +169,23 @@ class WebServer:
 
     def __init__(self, host: str = "0.0.0.0", port: int = 5000, config: Dict[str, Any] = None):
         """
-        Initialize web server.
+        Initialize web server with enhanced security.
 
         Args:
             host: Server host
             port: Server port
-            config: Application configuration
+            config: Application configuration (see create_app for details)
         """
         self.host = host
         self.port = port
-        self.app, self.socketio = create_app(config)
+        self.app, self.socketio, self.auth_manager, self.rate_limiter = create_app(config)
         self._server_thread: Optional[threading.Thread] = None
         self.is_running = False
 
-        logger.info(f"WebServer initialized (host={host}, port={port})")
+        logger.info(
+            f"WebServer initialized (host={host}, port={port}, "
+            f"auth={'enabled' if self.auth_manager.enabled else 'disabled'})"
+        )
 
     def start(self):
         """Start the web server in a background thread."""
