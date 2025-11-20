@@ -68,7 +68,7 @@ class VisionCache:
             Cache key string
         """
         # Use image hash + operation + params as key
-        image_hash = hashlib.md5(image.tobytes()).hexdigest()[:16]
+        image_hash = hashlib.md5(image.tobytes(), usedforsecurity=False).hexdigest()[:16]
         params_str = "_".join(str(p) for p in params)
         return f"{operation}_{image_hash}_{params_str}"
 
@@ -252,7 +252,7 @@ class ImageComparator:
         Returns:
             MD5 hash string
         """
-        return hashlib.md5(image.tobytes()).hexdigest()
+        return hashlib.md5(image.tobytes(), usedforsecurity=False).hexdigest()
 
     @staticmethod
     def are_similar(image1: np.ndarray, image2: np.ndarray, threshold: float = 0.95) -> bool:
