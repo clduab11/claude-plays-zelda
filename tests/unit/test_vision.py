@@ -205,21 +205,13 @@ class TestObjectDetector:
             item = result[0]
             assert isinstance(item, dict)
 
-    @patch("cv2.matchTemplate")
-    def test_detect_enemies_uses_template_matching(
-        self, mock_match, object_detector, sample_game_image
-    ):
-        """Test that enemy detection might use template matching."""
-        # Setup mock
-        mock_match.return_value = np.zeros((100, 100), dtype=np.float32)
-
-        # This test verifies the method exists and runs
-        try:
-            result = object_detector.detect_enemies(sample_game_image)
-            assert isinstance(result, list)
-        except Exception:
-            # Method might not use template matching, that's okay
-            pass
+    def test_detect_enemies_by_color(self, object_detector, sample_game_image):
+        """Test that enemy detection by color returns a list."""
+        # Test the actual method that exists
+        result = object_detector.detect_enemies_by_color(sample_game_image)
+        assert isinstance(result, list)
+        # Result may be empty for test image, but should be a valid list
+        assert all(isinstance(enemy, dict) for enemy in result)
 
 
 class TestVisionIntegration:
