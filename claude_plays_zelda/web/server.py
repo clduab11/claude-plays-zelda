@@ -181,9 +181,15 @@ class WebServer:
         Initialize web server with enhanced security.
 
         Args:
-            host: Server host
+            host: Server host (default "0.0.0.0" binds to all interfaces for 
+                  containerized deployment; use "127.0.0.1" for local-only access)
             port: Server port
             config: Application configuration (see create_app for details)
+        
+        Security Note:
+            Binding to 0.0.0.0 is intentional for Docker/container environments.
+            For production deployments, ensure proper firewall rules and use the
+            authentication/rate limiting features provided in the config.
         """
         self.host = host
         self.port = port
