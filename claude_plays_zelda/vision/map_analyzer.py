@@ -1,6 +1,6 @@
 """Map analysis and navigation system."""
 
-from typing import Dict, List, Tuple, Optional, Set
+from typing import Dict, List, Tuple, Optional, Set, Any
 import cv2
 import numpy as np
 from collections import deque
