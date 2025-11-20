@@ -1,7 +1,5 @@
 """Tests for web security module."""
 
-import pytest
-import time
 from claude_plays_zelda.web.security import (
     RateLimiter,
     AuthenticationManager,
@@ -196,20 +194,13 @@ class TestSecurityUtilities:
     def test_get_cors_config_custom_origins(self):
         """Test CORS config with custom origins."""
         custom_origins = ["https://example.com", "https://app.example.com"]
-        config = get_cors_config(
-            environment="production",
-            allowed_origins=custom_origins
-        )
+        config = get_cors_config(environment="production", allowed_origins=custom_origins)
 
         assert config["origins"] == custom_origins
 
     def test_validate_input_valid(self):
         """Test input validation with valid data."""
-        data = {
-            "name": "test",
-            "value": 123,
-            "enabled": True
-        }
+        data = {"name": "test", "value": 123, "enabled": True}
         required = ["name", "value"]
 
         is_valid, error = validate_input(data, required)

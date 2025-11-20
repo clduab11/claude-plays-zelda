@@ -3,7 +3,7 @@
 import time
 import hashlib
 from typing import Any, Optional, Dict, Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from collections import OrderedDict
 import numpy as np
 from loguru import logger
@@ -72,12 +72,7 @@ class VisionCache:
         params_str = "_".join(str(p) for p in params)
         return f"{operation}_{image_hash}_{params_str}"
 
-    def get(
-        self,
-        image: np.ndarray,
-        operation: str,
-        params: tuple = ()
-    ) -> Optional[Any]:
+    def get(self, image: np.ndarray, operation: str, params: tuple = ()) -> Optional[Any]:
         """
         Get cached result if available and valid.
 
@@ -109,9 +104,7 @@ class VisionCache:
         entry.hit_count += 1
         self._hits += 1
 
-        logger.debug(
-            f"Cache HIT: {operation} (age={age:.2f}s, hits={entry.hit_count})"
-        )
+        logger.debug(f"Cache HIT: {operation} (age={age:.2f}s, hits={entry.hit_count})")
         return entry.value
 
     def put(
@@ -120,7 +113,7 @@ class VisionCache:
         operation: str,
         value: Any,
         params: tuple = (),
-        compute_time: float = 0.0
+        compute_time: float = 0.0,
     ):
         """
         Store result in cache.
@@ -143,11 +136,7 @@ class VisionCache:
             logger.debug(f"Cache eviction: {oldest_key}")
 
         # Store new entry
-        self._cache[key] = CacheEntry(
-            value=value,
-            timestamp=time.time(),
-            compute_time=compute_time
-        )
+        self._cache[key] = CacheEntry(value=value, timestamp=time.time(), compute_time=compute_time)
 
         # Move to end (most recently used)
         self._cache.move_to_end(key)
@@ -155,11 +144,7 @@ class VisionCache:
         logger.debug(f"Cache PUT: {operation} (compute_time={compute_time:.3f}s)")
 
     def cached_operation(
-        self,
-        image: np.ndarray,
-        operation: str,
-        func: Callable,
-        params: tuple = ()
+        self, image: np.ndarray, operation: str, func: Callable, params: tuple = ()
     ) -> Any:
         """
         Execute operation with caching.
@@ -202,15 +187,10 @@ class VisionCache:
             logger.info(f"Cache cleared: {count} entries removed")
         else:
             # Remove entries matching operation
-            keys_to_remove = [
-                k for k in self._cache.keys()
-                if k.startswith(f"{operation}_")
-            ]
+            keys_to_remove = [k for k in self._cache.keys() if k.startswith(f"{operation}_")]
             for key in keys_to_remove:
                 del self._cache[key]
-            logger.info(
-                f"Cache cleared for '{operation}': {len(keys_to_remove)} entries"
-            )
+            logger.info(f"Cache cleared for '{operation}': {len(keys_to_remove)} entries")
 
     def get_stats(self) -> Dict[str, Any]:
         """
@@ -275,11 +255,7 @@ class ImageComparator:
         return hashlib.md5(image.tobytes()).hexdigest()
 
     @staticmethod
-    def are_similar(
-        image1: np.ndarray,
-        image2: np.ndarray,
-        threshold: float = 0.95
-    ) -> bool:
+    def are_similar(image1: np.ndarray, image2: np.ndarray, threshold: float = 0.95) -> bool:
         """
         Check if two images are similar.
 
@@ -303,9 +279,7 @@ class ImageComparator:
 
     @staticmethod
     def has_significant_change(
-        image1: np.ndarray,
-        image2: np.ndarray,
-        threshold: float = 0.05
+        image1: np.ndarray, image2: np.ndarray, threshold: float = 0.05
     ) -> bool:
         """
         Check if there's significant change between images.
@@ -318,9 +292,7 @@ class ImageComparator:
         Returns:
             True if significant change detected
         """
-        return not ImageComparator.are_similar(
-            image1, image2, threshold=1.0 - threshold
-        )
+        return not ImageComparator.are_similar(image1, image2, threshold=1.0 - threshold)
 
 
 class AdaptiveVisionProcessor:
@@ -355,8 +327,7 @@ class AdaptiveVisionProcessor:
         self._stable_frames = 0
 
         logger.info(
-            f"AdaptiveVisionProcessor initialized: "
-            f"interval={min_interval}-{max_interval}s"
+            f"AdaptiveVisionProcessor initialized: " f"interval={min_interval}-{max_interval}s"
         )
 
     def should_process(self, image: np.ndarray) -> bool:
@@ -384,9 +355,7 @@ class AdaptiveVisionProcessor:
 
         # Check for significant changes
         has_change = ImageComparator.has_significant_change(
-            self._last_image,
-            image,
-            threshold=self.change_threshold
+            self._last_image, image, threshold=self.change_threshold
         )
 
         if has_change:
@@ -398,10 +367,7 @@ class AdaptiveVisionProcessor:
             # Scene stable - gradually increase interval
             self._stable_frames += 1
             if self._stable_frames > 10:
-                self._current_interval = min(
-                    self._current_interval * 1.2,
-                    self.max_interval
-                )
+                self._current_interval = min(self._current_interval * 1.2, self.max_interval)
                 logger.debug(
                     f"Scene stable, reducing processing rate "
                     f"(interval={self._current_interval:.2f}s)"

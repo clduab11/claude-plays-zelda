@@ -2,7 +2,7 @@
 
 import pytest
 import numpy as np
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
 from claude_plays_zelda.vision.game_state_detector import GameStateDetector
 from claude_plays_zelda.vision.ocr import OCRProcessor
 from claude_plays_zelda.vision.object_detector import ObjectDetector
@@ -25,29 +25,29 @@ class TestGameStateDetector:
     def test_detector_initialization(self, detector):
         """Test that detector initializes properly."""
         assert detector is not None
-        assert hasattr(detector, 'detect_hearts')
-        assert hasattr(detector, 'detect_rupees')
+        assert hasattr(detector, "detect_hearts")
+        assert hasattr(detector, "detect_rupees")
 
     def test_detect_hearts_with_empty_image(self, detector, sample_image):
         """Test heart detection with empty image."""
         result = detector.detect_hearts(sample_image)
 
         assert isinstance(result, dict)
-        assert 'current_hearts' in result
-        assert 'max_hearts' in result
-        assert isinstance(result['current_hearts'], (int, float))
-        assert isinstance(result['max_hearts'], (int, float))
+        assert "current_hearts" in result
+        assert "max_hearts" in result
+        assert isinstance(result["current_hearts"], (int, float))
+        assert isinstance(result["max_hearts"], (int, float))
 
     def test_detect_hearts_returns_valid_range(self, detector, sample_image):
         """Test that heart detection returns valid values."""
         result = detector.detect_hearts(sample_image)
 
         # Hearts should be non-negative
-        assert result['current_hearts'] >= 0
-        assert result['max_hearts'] >= 0
+        assert result["current_hearts"] >= 0
+        assert result["max_hearts"] >= 0
 
         # Current hearts shouldn't exceed max hearts
-        assert result['current_hearts'] <= result['max_hearts']
+        assert result["current_hearts"] <= result["max_hearts"]
 
     def test_detect_rupees_with_empty_image(self, detector, sample_image):
         """Test rupee detection with empty image."""
@@ -62,17 +62,17 @@ class TestGameStateDetector:
 
         # Verify state structure
         assert isinstance(state, dict)
-        assert 'hearts' in state
-        assert 'rupees' in state
-        assert 'timestamp' in state
+        assert "hearts" in state
+        assert "rupees" in state
+        assert "timestamp" in state
 
         # Verify hearts structure
-        assert isinstance(state['hearts'], dict)
-        assert 'current_hearts' in state['hearts']
-        assert 'max_hearts' in state['hearts']
+        assert isinstance(state["hearts"], dict)
+        assert "current_hearts" in state["hearts"]
+        assert "max_hearts" in state["hearts"]
 
-    @patch('cv2.cvtColor')
-    @patch('cv2.inRange')
+    @patch("cv2.cvtColor")
+    @patch("cv2.inRange")
     def test_detect_hearts_calls_cv2_functions(
         self, mock_inrange, mock_cvtcolor, detector, sample_image
     ):
@@ -106,12 +106,10 @@ class TestOCRProcessor:
     def test_ocr_processor_initialization(self, ocr_processor):
         """Test OCR processor initialization."""
         assert ocr_processor is not None
-        assert hasattr(ocr_processor, 'extract_text')
+        assert hasattr(ocr_processor, "extract_text")
 
-    @patch('pytesseract.image_to_string')
-    def test_extract_text_calls_pytesseract(
-        self, mock_tesseract, ocr_processor, sample_text_image
-    ):
+    @patch("pytesseract.image_to_string")
+    def test_extract_text_calls_pytesseract(self, mock_tesseract, ocr_processor, sample_text_image):
         """Test that extract_text uses pytesseract."""
         mock_tesseract.return_value = "TEST TEXT"
 
@@ -120,21 +118,18 @@ class TestOCRProcessor:
         mock_tesseract.assert_called_once()
         assert isinstance(result, str)
 
-    @patch('pytesseract.image_to_string')
+    @patch("pytesseract.image_to_string")
     def test_extract_text_with_confidence_threshold(
         self, mock_tesseract, ocr_processor, sample_text_image
     ):
         """Test text extraction with confidence threshold."""
         mock_tesseract.return_value = "ZELDA"
 
-        result = ocr_processor.extract_text(
-            sample_text_image,
-            confidence_threshold=80
-        )
+        result = ocr_processor.extract_text(sample_text_image, confidence_threshold=80)
 
         assert isinstance(result, str)
 
-    @patch('pytesseract.image_to_string')
+    @patch("pytesseract.image_to_string")
     def test_extract_text_handles_empty_result(
         self, mock_tesseract, ocr_processor, sample_text_image
     ):
@@ -147,7 +142,7 @@ class TestOCRProcessor:
 
     def test_preprocess_image(self, ocr_processor, sample_text_image):
         """Test image preprocessing for OCR."""
-        if hasattr(ocr_processor, 'preprocess_image'):
+        if hasattr(ocr_processor, "preprocess_image"):
             result = ocr_processor.preprocess_image(sample_text_image)
 
             assert isinstance(result, np.ndarray)
@@ -171,20 +166,16 @@ class TestObjectDetector:
     def test_object_detector_initialization(self, object_detector):
         """Test object detector initialization."""
         assert object_detector is not None
-        assert hasattr(object_detector, 'detect_enemies')
-        assert hasattr(object_detector, 'detect_items')
+        assert hasattr(object_detector, "detect_enemies")
+        assert hasattr(object_detector, "detect_items")
 
-    def test_detect_enemies_returns_list(
-        self, object_detector, sample_game_image
-    ):
+    def test_detect_enemies_returns_list(self, object_detector, sample_game_image):
         """Test that enemy detection returns a list."""
         result = object_detector.detect_enemies(sample_game_image)
 
         assert isinstance(result, list)
 
-    def test_detect_enemies_structure(
-        self, object_detector, sample_game_image
-    ):
+    def test_detect_enemies_structure(self, object_detector, sample_game_image):
         """Test structure of enemy detection results."""
         result = object_detector.detect_enemies(sample_game_image)
 
@@ -196,19 +187,15 @@ class TestObjectDetector:
             enemy = result[0]
             assert isinstance(enemy, dict)
             # Common fields in enemy detection
-            assert any(key in enemy for key in ['type', 'position', 'bbox', 'confidence'])
+            assert any(key in enemy for key in ["type", "position", "bbox", "confidence"])
 
-    def test_detect_items_returns_list(
-        self, object_detector, sample_game_image
-    ):
+    def test_detect_items_returns_list(self, object_detector, sample_game_image):
         """Test that item detection returns a list."""
         result = object_detector.detect_items(sample_game_image)
 
         assert isinstance(result, list)
 
-    def test_detect_items_structure(
-        self, object_detector, sample_game_image
-    ):
+    def test_detect_items_structure(self, object_detector, sample_game_image):
         """Test structure of item detection results."""
         result = object_detector.detect_items(sample_game_image)
 
@@ -218,7 +205,7 @@ class TestObjectDetector:
             item = result[0]
             assert isinstance(item, dict)
 
-    @patch('cv2.matchTemplate')
+    @patch("cv2.matchTemplate")
     def test_detect_enemies_uses_template_matching(
         self, mock_match, object_detector, sample_game_image
     ):
@@ -246,14 +233,13 @@ class TestVisionIntegration:
         state = detector.get_full_game_state(image)
 
         assert state is not None
-        assert 'hearts' in state
-        assert 'rupees' in state
+        assert "hearts" in state
+        assert "rupees" in state
 
     def test_vision_pipeline_components_work_together(self):
         """Test that vision components can work in pipeline."""
         # Create components
         detector = GameStateDetector()
-        ocr = OCRProcessor()
         obj_detector = ObjectDetector()
 
         # Create test image
@@ -269,11 +255,14 @@ class TestVisionIntegration:
         assert isinstance(enemies, list)
         assert isinstance(items, list)
 
-    @pytest.mark.parametrize("width,height", [
-        (256, 240),  # Standard NES
-        (512, 480),  # 2x scale
-        (768, 720),  # 3x scale
-    ])
+    @pytest.mark.parametrize(
+        "width,height",
+        [
+            (256, 240),  # Standard NES
+            (512, 480),  # 2x scale
+            (768, 720),  # 3x scale
+        ],
+    )
     def test_detector_handles_different_scales(self, width, height):
         """Test detector with different image scales."""
         detector = GameStateDetector()
