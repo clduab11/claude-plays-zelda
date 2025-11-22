@@ -60,6 +60,15 @@ class GameOrchestrator:
 
         logger.info("GameOrchestrator initialized successfully")
 
+        # Configure thought logger
+        logger.add(
+            "logs/thoughts.log",
+            format="{message}",
+            level="INFO",
+            filter=lambda record: record["extra"].get("is_thought", False),
+            rotation="10 MB"
+        )
+
     def start(self, auto_start_emulator: bool = True):
         """
         Start the AI agent system.
@@ -219,6 +228,16 @@ class GameOrchestrator:
             reasoning = decision.get("reasoning", "")
 
             logger.info(f"Executing: {action} - {reasoning}")
+
+            # Log thought
+            thought_msg = (
+                f"\n{'='*60}\n"
+                f"🧠 THOUGHT:\n{reasoning}\n\n"
+                f"⚡ ACTION: {action}\n"
+                f"🔧 PARAMS: {parameters}\n"
+                f"{'='*60}"
+            )
+            logger.bind(is_thought=True).info(thought_msg)
 
             # Record action
             self.agent.context_manager.add_action(f"{action}({parameters})")

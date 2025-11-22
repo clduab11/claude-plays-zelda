@@ -1,16 +1,16 @@
 # Claude AI Configuration
 claude:
-  api_key: ${ANTHROPIC_API_KEY}  # Set via environment variable
-  model: ${CLAUDE_MODEL}  # Uses claude-sonnet-4-5-20250929 from .env
+  api_key: ${ANTHROPIC_API_KEY} # Set via environment variable
+  model: claude-sonnet-4-5-20250929
   max_tokens: 4096
   temperature: 0.7
 
 # Emulator Configuration
 emulator:
-  type: fceux
-  executable_path: fceux  # Path to NES emulator
-  rom_path: zelda_nes.nes  # Path to Legend of Zelda (1986) ROM
-  window_name: FCEUX
+  type: mesen
+  executable_path: "C:\\ai-playground\\nes-emulator-test\\Mesen.exe"
+  rom_path: "C:\\ai-playground\\nes-emulator-test\\roms\\Legend of Zelda, The (USA) (Rev 1).nes"
+  window_name: Mesen
   fps: 60
   save_state_dir: save_states
 
@@ -23,12 +23,12 @@ cv:
     confidence_threshold: 0.5
     nms_threshold: 0.4
   screen_capture:
-    interval: 0.1  # seconds between captures
-    resolution: [256, 240]  # NES resolution
+    interval: 0.1 # seconds between captures
+    resolution: [256, 240] # NES resolution
 
 # AI Agent Configuration
 agent:
-  decision_interval: 0.5  # seconds between decisions
+  decision_interval: 0.5 # seconds between decisions
   memory:
     max_history: 100
     persistence_file: agent_memory.json
@@ -45,7 +45,7 @@ game:
     pathfinding_algorithm: a_star
     revisit_threshold: 3
   objectives:
-    auto_save_interval: 300  # seconds
+    auto_save_interval: 300 # seconds
 
 # Streaming Configuration
 streaming:
@@ -58,7 +58,7 @@ streaming:
     port: 5000
     enable_cors: true
   stats:
-    update_interval: 5  # seconds
+    update_interval: 5 # seconds
 
 # Logging Configuration
 logging:
