@@ -33,7 +33,16 @@ class GameLoop:
         self.state = GameState.MENU
         self.consecutive_hud_frames = 0
 
-        logger.info("GameLoop initialized")
+        # Load state machine configuration
+        game_config = config.game if hasattr(config, 'game') else {}
+        state_machine_config = game_config.get('state_machine', {})
+
+        self.hud_stability_frames = state_machine_config.get('hud_stability_frames', 10)
+        self.menu_button_delay = state_machine_config.get('menu_button_delay', 0.5)
+        self.menu_wait_time = state_machine_config.get('menu_wait_time', 2.0)
+
+        logger.info(f"GameLoop initialized with hud_stability_frames={self.hud_stability_frames}, "
+                   f"menu_button_delay={self.menu_button_delay}s, menu_wait_time={self.menu_wait_time}s")
 
     def run(self, max_iterations: Optional[int] = None):
         """
@@ -72,18 +81,25 @@ class GameLoop:
                 # Update State Machine
                 is_title = frame_data.get("is_title_screen", False)
                 is_in_game = frame_data.get("is_in_game", False)
-                
+
+                # Track HUD stability
                 if is_in_game:
                     self.consecutive_hud_frames += 1
                 else:
+                    if self.consecutive_hud_frames > 0:
+                        logger.debug(f"HUD lost, resetting consecutive_hud_frames from {self.consecutive_hud_frames} to 0")
                     self.consecutive_hud_frames = 0
-                    
-                # Transition Logic
+
+                # Transition Logic with enhanced logging
                 if self.state == GameState.MENU:
-                    if self.consecutive_hud_frames > 10: # Require 10 stable frames of HUD (approx 1-2 sec)
-                        logger.info("HUD detected consistently. Transitioning to PLAYING state.")
+                    # Require configurable number of stable HUD frames before transitioning
+                    if self.consecutive_hud_frames > self.hud_stability_frames:
+                        logger.info(f"HUD detected consistently for {self.consecutive_hud_frames} frames "
+                                  f"(threshold: {self.hud_stability_frames}). Transitioning to PLAYING state.")
                         self.state = GameState.PLAYING
-                        
+                    elif self.consecutive_hud_frames > 0:
+                        logger.debug(f"HUD stability: {self.consecutive_hud_frames}/{self.hud_stability_frames} frames")
+
                 elif self.state == GameState.PLAYING:
                     if is_title:
                         logger.info("Title screen detected. Transitioning to MENU state.")
@@ -96,15 +112,15 @@ class GameLoop:
                     
                     if self.state == GameState.MENU:
                         # MENU LOGIC: Robust start sequence
-                        logger.info("State: MENU - Executing start sequence...")
-                        
-                        # Press START multiple times with delays to ensure we skip title/intro
+                        logger.info(f"State: MENU - Executing start sequence (button_delay={self.menu_button_delay}s, wait_time={self.menu_wait_time}s)...")
+
+                        # Press START multiple times with configurable delays to ensure we skip title/intro
                         self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
-                        time.sleep(0.5)
+                        time.sleep(self.menu_button_delay)
                         self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
-                        
-                        # Wait a bit longer in menu to allow screen transitions
-                        last_decision_time = time.time() + 2.0 
+
+                        # Wait for screen transitions (configurable)
+                        last_decision_time = time.time() + self.menu_wait_time
                         continue
                         
                     elif self.state == GameState.PLAYING:
