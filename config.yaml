@@ -41,11 +41,30 @@ game:
   combat:
     aggressive_mode: false
     dodge_priority: high
+    change_ratio_threshold: 0.15  # Threshold for detecting combat via screen changes
   navigation:
     pathfinding_algorithm: a_star
     revisit_threshold: 3
   objectives:
     auto_save_interval: 300 # seconds
+  state_machine:
+    # Number of consecutive frames with HUD required to transition from MENU to PLAYING
+    hud_stability_frames: 10
+    # Delays for menu navigation (in seconds)
+    menu_button_delay: 0.5
+    menu_wait_time: 2.0
+  detection:
+    # Valid heart count range for gameplay (min and max)
+    min_hearts: 3
+    max_hearts: 20
+    # Heart contour area detection thresholds (in pixels)
+    heart_min_area: 50
+    heart_max_area: 500
+    # OCR detection settings
+    ocr_retry_attempts: 3
+    ocr_retry_delay: 0.1  # seconds between retry attempts
+    # Cache settings for expensive operations
+    title_screen_cache_duration: 0.5  # seconds to cache title screen detection
 
 # Streaming Configuration
 streaming:
