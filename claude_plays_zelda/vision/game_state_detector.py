@@ -72,6 +72,33 @@ class GameStateDetector:
             logger.error(f"Error detecting title screen: {e}")
             return False
 
+    def detect_gameplay_hud(self, image: np.ndarray) -> bool:
+        """
+        Detect if the gameplay HUD (hearts, rupees) is visible.
+        
+        Args:
+            image: Full game screen
+            
+        Returns:
+            True if HUD is detected (implies in-game)
+        """
+        try:
+            # Check for hearts
+            hearts = self.detect_hearts(image)
+            if hearts["max_hearts"] > 0:
+                return True
+                
+            # Check for rupee icon/count
+            # This is less reliable than hearts but good secondary check
+            # rupee_region = self.get_region(image, "rupees")
+            # ...
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error detecting HUD: {e}")
+            return False
+
     def get_region(self, image: np.ndarray, region_key: str) -> Optional[np.ndarray]:
         """
         Extract a UI region from the screen.
@@ -284,6 +311,7 @@ class GameStateDetector:
             "current_item": self.detect_current_item(image),
             "location": self.detect_location(image),
             "is_title_screen": self.detect_title_screen(image),
+            "is_in_game": self.detect_gameplay_hud(image),
             "timestamp": None,  # Will be set by caller
         }
 

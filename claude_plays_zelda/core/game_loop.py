@@ -9,6 +9,12 @@ from claude_plays_zelda.core.orchestrator import GameOrchestrator
 from claude_plays_zelda.emulator.input_controller import SNESButton
 
 
+from enum import Enum, auto
+
+class GameState(Enum):
+    MENU = auto()
+    PLAYING = auto()
+
 class GameLoop:
     """Main game loop that runs the AI agent."""
 
@@ -24,6 +30,8 @@ class GameLoop:
         self.is_paused = False
         self.frame_count = 0
         self.last_save_time = time.time()
+        self.state = GameState.MENU
+        self.consecutive_hud_frames = 0
 
         logger.info("GameLoop initialized")
 
@@ -60,39 +68,56 @@ class GameLoop:
                     continue
 
                 self.frame_count += 1
+                
+                # Update State Machine
+                is_title = frame_data.get("is_title_screen", False)
+                is_in_game = frame_data.get("is_in_game", False)
+                
+                if is_in_game:
+                    self.consecutive_hud_frames += 1
+                else:
+                    self.consecutive_hud_frames = 0
+                    
+                # Transition Logic
+                if self.state == GameState.MENU:
+                    if self.consecutive_hud_frames > 5: # Require 5 stable frames of HUD
+                        logger.info("HUD detected consistently. Transitioning to PLAYING state.")
+                        self.state = GameState.PLAYING
+                        
+                elif self.state == GameState.PLAYING:
+                    if is_title:
+                        logger.info("Title screen detected. Transitioning to MENU state.")
+                        self.state = GameState.MENU
+                        self.consecutive_hud_frames = 0
 
                 # Make decision at intervals
                 current_time = time.time()
                 if current_time - last_decision_time >= self.config.decision_interval:
-                    # Check for title screen/start menu
-                    if frame_data.get("is_title_screen", False):
-                        logger.info("Title screen detected. Executing start sequence...")
-                        # Simple start sequence: Press START, wait, Press START
+                    
+                    if self.state == GameState.MENU:
+                        # MENU LOGIC: Hardcoded navigation
+                        logger.info("State: MENU - Executing start sequence...")
                         self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
-                        time.sleep(1.0)
-                        self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
-                        time.sleep(1.0)
-                        # One more start to confirm selection if needed
-                        self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
-                        time.sleep(2.0)
-                        last_decision_time = time.time()
+                        # Wait a bit longer in menu
+                        last_decision_time = time.time() + 1.0 
                         continue
+                        
+                    elif self.state == GameState.PLAYING:
+                        # GAMEPLAY LOGIC: AI Agent
+                        decision = self.orchestrator.make_decision(frame_data)
 
-                    # Make decision
-                    decision = self.orchestrator.make_decision(frame_data)
+                        # Execute action
+                        frame_data_before = frame_data
+                        self.orchestrator.execute_action(decision)
 
-                    # Execute action
-                    frame_data_before = frame_data
-                    self.orchestrator.execute_action(decision)
+                        # Wait for action to complete
+                        time.sleep(self.config.action_delay)
 
-                    # Wait for action to complete
-                    time.sleep(self.config.action_delay)
+                        # Evaluate outcome
+                        frame_data_after = self.orchestrator.process_frame()
+                        self.orchestrator.evaluate_outcome(frame_data_before, frame_data_after)
 
-                    # Evaluate outcome
-                    frame_data_after = self.orchestrator.process_frame()
-                    self.orchestrator.evaluate_outcome(frame_data_before, frame_data_after)
-
-                    last_decision_time = current_time
+                        last_decision_time = current_time
 
                 # Auto-save periodically
                 if current_time - self.last_save_time >= self.config.auto_save_interval:
