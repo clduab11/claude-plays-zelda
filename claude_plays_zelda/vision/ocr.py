@@ -27,7 +27,35 @@ class GameOCR:
         self.tesseract_config = tesseract_config
         self.preprocess = preprocess
         self.last_dialogue = ""
+        
+        # Auto-detect Tesseract path if not in PATH
+        self._configure_tesseract()
+        
         logger.info("GameOCR initialized")
+
+    def _configure_tesseract(self):
+        """Configure Tesseract path if not found in PATH."""
+        import shutil
+        import os
+        
+        # Check if tesseract is in PATH
+        if shutil.which("tesseract"):
+            return
+            
+        # Common installation paths on Windows
+        common_paths = [
+            r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+            r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+            os.path.expanduser(r"~\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"),
+        ]
+        
+        for path in common_paths:
+            if os.path.exists(path):
+                logger.info(f"Found Tesseract at: {path}")
+                pytesseract.pytesseract.tesseract_cmd = path
+                return
+                
+        logger.warning("Tesseract not found in PATH or common locations. OCR may fail.")
 
     def preprocess_image(self, image: np.ndarray) -> np.ndarray:
         """
