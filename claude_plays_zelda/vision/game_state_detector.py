@@ -83,17 +83,25 @@ class GameStateDetector:
             True if HUD is detected (implies in-game)
         """
         try:
-            # Check for hearts
+            # Check for hearts - stricter check
             hearts = self.detect_hearts(image)
-            if hearts["max_hearts"] > 0:
-                return True
-                
-            # Check for rupee icon/count
-            # This is less reliable than hearts but good secondary check
-            # rupee_region = self.get_region(image, "rupees")
-            # ...
             
-            return False
+            # Link starts with 3 hearts, max is usually 16-20. 
+            # 9 hearts on title screen is a clear false positive.
+            # Also, if we have 0 max hearts, we are definitely not in game.
+            if hearts["max_hearts"] < 3 or hearts["max_hearts"] > 20:
+                return False
+                
+            # Secondary check: Minimap or Rupees
+            # The minimap is usually a good indicator of gameplay
+            # But it might be black in dungeons.
+            
+            # Let's trust the heart count if it's reasonable (3-20)
+            # AND if we are not on the title screen
+            if self.detect_title_screen(image):
+                return False
+                
+            return True
             
         except Exception as e:
             logger.error(f"Error detecting HUD: {e}")

@@ -80,7 +80,7 @@ class GameLoop:
                     
                 # Transition Logic
                 if self.state == GameState.MENU:
-                    if self.consecutive_hud_frames > 5: # Require 5 stable frames of HUD
+                    if self.consecutive_hud_frames > 10: # Require 10 stable frames of HUD (approx 1-2 sec)
                         logger.info("HUD detected consistently. Transitioning to PLAYING state.")
                         self.state = GameState.PLAYING
                         
@@ -95,11 +95,16 @@ class GameLoop:
                 if current_time - last_decision_time >= self.config.decision_interval:
                     
                     if self.state == GameState.MENU:
-                        # MENU LOGIC: Hardcoded navigation
+                        # MENU LOGIC: Robust start sequence
                         logger.info("State: MENU - Executing start sequence...")
+                        
+                        # Press START multiple times with delays to ensure we skip title/intro
                         self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
-                        # Wait a bit longer in menu
-                        last_decision_time = time.time() + 1.0 
+                        time.sleep(0.5)
+                        self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
+                        
+                        # Wait a bit longer in menu to allow screen transitions
+                        last_decision_time = time.time() + 2.0 
                         continue
                         
                     elif self.state == GameState.PLAYING:
