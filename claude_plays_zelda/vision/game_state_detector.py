@@ -1,6 +1,7 @@
 """Detects game state from screen (health, rupees, inventory, etc.)."""
 
 from typing import Dict, Any, Optional, Tuple
+import time
 import cv2
 import numpy as np
 from loguru import logger
@@ -9,8 +10,13 @@ from loguru import logger
 class GameStateDetector:
     """Detects various game state elements from the screen."""
 
-    def __init__(self):
-        """Initialize game state detector."""
+    def __init__(self, config: Optional[Any] = None):
+        """
+        Initialize game state detector.
+
+        Args:
+            config: Optional configuration object with detection parameters
+        """
         # Define color ranges for different UI elements (in HSV)
         self.color_ranges = {
             # Heart colors (red for filled, darker for empty)
@@ -38,71 +44,173 @@ class GameStateDetector:
             "minimap": (0.02, 0.02, 0.15, 0.15),
         }
 
-        logger.info("GameStateDetector initialized")
+        # Load configuration values or use defaults
+        self.config = config
+        if config and hasattr(config, 'game'):
+            game_config = config.game
+            self.min_hearts = game_config.get('detection', {}).get('min_hearts', 3)
+            self.max_hearts = game_config.get('detection', {}).get('max_hearts', 20)
+            self.heart_min_area = game_config.get('detection', {}).get('heart_min_area', 50)
+            self.heart_max_area = game_config.get('detection', {}).get('heart_max_area', 500)
+            self.ocr_retry_attempts = game_config.get('detection', {}).get('ocr_retry_attempts', 3)
+            self.ocr_retry_delay = game_config.get('detection', {}).get('ocr_retry_delay', 0.1)
+            self.title_screen_cache_duration = game_config.get('detection', {}).get('title_screen_cache_duration', 0.5)
+            self.combat_change_ratio = game_config.get('combat', {}).get('change_ratio_threshold', 0.15)
+        else:
+            # Default values
+            self.min_hearts = 3
+            self.max_hearts = 20
+            self.heart_min_area = 50
+            self.heart_max_area = 500
+            self.ocr_retry_attempts = 3
+            self.ocr_retry_delay = 0.1
+            self.title_screen_cache_duration = 0.5
+            self.combat_change_ratio = 0.15
 
-    def detect_title_screen(self, image: np.ndarray) -> bool:
+        # Cache for OCR instance (expensive to create)
+        self._ocr_instance = None
+
+        # Cache for title screen detection (expensive OCR operation)
+        self._title_screen_cache = None
+        self._title_screen_cache_time = 0
+
+        logger.info(f"GameStateDetector initialized with min_hearts={self.min_hearts}, max_hearts={self.max_hearts}")
+
+    def _get_ocr_instance(self):
+        """
+        Get cached OCR instance to avoid creating new instances repeatedly.
+
+        Returns:
+            GameOCR instance
+        """
+        if self._ocr_instance is None:
+            from claude_plays_zelda.vision.ocr import GameOCR
+            self._ocr_instance = GameOCR()
+            logger.debug("Created new OCR instance")
+        return self._ocr_instance
+
+    def detect_title_screen(self, image: np.ndarray, force_refresh: bool = False) -> bool:
         """
         Detect if the game is at the title screen or file select.
-        
+
+        Uses caching to avoid expensive OCR operations on every frame.
+        Cache is invalidated after title_screen_cache_duration seconds.
+
         Args:
             image: Full game screen
-            
+            force_refresh: If True, bypass cache and force fresh detection
+
+        Returns:
+            True if at title screen/file select
+
+        Edge Cases:
+            - OCR may misread pixelated NES text
+            - Emulator lag could cause cached results to be stale
+            - Different Zelda games may have different title text
+        """
+        current_time = time.time()
+
+        # Check cache first (unless force_refresh is True)
+        if not force_refresh and self._title_screen_cache is not None:
+            cache_age = current_time - self._title_screen_cache_time
+            if cache_age < self.title_screen_cache_duration:
+                logger.debug(f"Using cached title screen result: {self._title_screen_cache} (age: {cache_age:.2f}s)")
+                return self._title_screen_cache
+
+        # Perform detection with retry logic
+        result = self._detect_title_screen_with_retry(image)
+
+        # Update cache
+        self._title_screen_cache = result
+        self._title_screen_cache_time = current_time
+
+        return result
+
+    def _detect_title_screen_with_retry(self, image: np.ndarray) -> bool:
+        """
+        Detect title screen with retry logic for OCR failures.
+
+        Args:
+            image: Full game screen
+
         Returns:
             True if at title screen/file select
         """
-        try:
-            # Use OCR to look for specific text
-            from claude_plays_zelda.vision.ocr import GameOCR
-            ocr = GameOCR()
-            
-            # Check for title screen text
-            # "ZELDA" is usually prominent, or "REGISTER YOUR NAME"
-            text = ocr.extract_text(image, preprocess=True)
-            
-            keywords = ["ZELDA", "LEGEND", "REGISTER", "ELIMINATION", "NAME"]
-            text_upper = text.upper()
-            
-            for keyword in keywords:
-                if keyword in text_upper:
-                    return True
-                    
-            return False
-            
-        except Exception as e:
-            logger.error(f"Error detecting title screen: {e}")
-            return False
+        for attempt in range(self.ocr_retry_attempts):
+            try:
+                # Use cached OCR instance
+                ocr = self._get_ocr_instance()
+
+                # Check for title screen text
+                # "ZELDA" is usually prominent, or "REGISTER YOUR NAME"
+                text = ocr.extract_text(image, preprocess=True)
+
+                keywords = ["ZELDA", "LEGEND", "REGISTER", "ELIMINATION", "NAME"]
+                text_upper = text.upper()
+
+                for keyword in keywords:
+                    if keyword in text_upper:
+                        logger.debug(f"Title screen detected: found keyword '{keyword}' in text: {text}")
+                        return True
+
+                # If we successfully extracted text but didn't find keywords, return False
+                return False
+
+            except Exception as e:
+                logger.warning(f"Error detecting title screen (attempt {attempt + 1}/{self.ocr_retry_attempts}): {e}")
+                if attempt < self.ocr_retry_attempts - 1:
+                    time.sleep(self.ocr_retry_delay)
+                else:
+                    logger.error(f"Failed to detect title screen after {self.ocr_retry_attempts} attempts")
+                    return False
+
+        return False
 
     def detect_gameplay_hud(self, image: np.ndarray) -> bool:
         """
         Detect if the gameplay HUD (hearts, rupees) is visible.
-        
+
+        Uses a two-stage detection process:
+        1. Check if heart count is within valid gameplay range
+        2. Verify we're not on the title screen (uses cached OCR)
+
         Args:
             image: Full game screen
-            
+
         Returns:
             True if HUD is detected (implies in-game)
+
+        Edge Cases:
+            - Title screen may show decorative hearts (false positive)
+            - Game over screen may still show HUD briefly
+            - Heart count range is game-specific (configurable via config)
+            - Emulator lag could cause transient detection failures
+
+        Performance:
+            - Title screen detection is cached to avoid repeated OCR
+            - OCR instance is reused across calls
         """
         try:
             # Check for hearts - stricter check
             hearts = self.detect_hearts(image)
-            
-            # Link starts with 3 hearts, max is usually 16-20. 
-            # 9 hearts on title screen is a clear false positive.
-            # Also, if we have 0 max hearts, we are definitely not in game.
-            if hearts["max_hearts"] < 3 or hearts["max_hearts"] > 20:
+
+            # Link starts with 3 hearts (default), max is usually 16-20.
+            # Heart count outside this range suggests false positive or not in game.
+            # Note: These values are configurable for different Zelda games.
+            if hearts["max_hearts"] < self.min_hearts or hearts["max_hearts"] > self.max_hearts:
+                logger.debug(f"Heart count {hearts['max_hearts']} outside valid range [{self.min_hearts}, {self.max_hearts}]")
                 return False
-                
-            # Secondary check: Minimap or Rupees
-            # The minimap is usually a good indicator of gameplay
-            # But it might be black in dungeons.
-            
-            # Let's trust the heart count if it's reasonable (3-20)
-            # AND if we are not on the title screen
+
+            # Secondary check: Verify we're not on the title screen
+            # The title screen may have decorative hearts that look like HUD
+            # This uses cached OCR to avoid performance penalty
             if self.detect_title_screen(image):
+                logger.debug("Title screen detected, HUD check returns False")
                 return False
-                
+
+            logger.debug(f"HUD detected: hearts={hearts}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Error detecting HUD: {e}")
             return False
@@ -187,16 +295,20 @@ class GameStateDetector:
 
         Returns:
             Number of hearts detected
+
+        Note:
+            Heart size thresholds are configurable via config.yaml
+            to support different screen resolutions and games.
         """
         try:
             # Find contours
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
             # Filter contours by size (hearts have consistent size)
-            min_area = 50
-            max_area = 500
+            # Uses configurable thresholds for flexibility
             valid_hearts = [
-                c for c in contours if min_area < cv2.contourArea(c) < max_area
+                c for c in contours
+                if self.heart_min_area < cv2.contourArea(c) < self.heart_max_area
             ]
 
             return len(valid_hearts)
@@ -349,6 +461,10 @@ class GameStateDetector:
 
         Returns:
             True if combat is likely occurring
+
+        Note:
+            Combat detection uses screen change ratio threshold
+            which is configurable via config.yaml combat.change_ratio_threshold
         """
         try:
             # Combat indicators:
@@ -367,7 +483,8 @@ class GameStateDetector:
             # High amount of change suggests combat
             change_ratio = np.sum(thresh > 0) / thresh.size
 
-            return change_ratio > 0.15  # More than 15% of screen changed
+            # Use configurable threshold
+            return change_ratio > self.combat_change_ratio
 
         except Exception as e:
             logger.error(f"Error detecting combat: {e}")
