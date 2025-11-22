@@ -6,6 +6,7 @@ from loguru import logger
 
 from claude_plays_zelda.core.config import Config
 from claude_plays_zelda.core.orchestrator import GameOrchestrator
+from claude_plays_zelda.emulator.input_controller import SNESButton
 
 
 class GameLoop:
@@ -63,6 +64,20 @@ class GameLoop:
                 # Make decision at intervals
                 current_time = time.time()
                 if current_time - last_decision_time >= self.config.decision_interval:
+                    # Check for title screen/start menu
+                    if frame_data.get("is_title_screen", False):
+                        logger.info("Title screen detected. Executing start sequence...")
+                        # Simple start sequence: Press START, wait, Press START
+                        self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
+                        time.sleep(1.0)
+                        self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
+                        time.sleep(1.0)
+                        # One more start to confirm selection if needed
+                        self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
+                        time.sleep(2.0)
+                        last_decision_time = time.time()
+                        continue
+
                     # Make decision
                     decision = self.orchestrator.make_decision(frame_data)
 

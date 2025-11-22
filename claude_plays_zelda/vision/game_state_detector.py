@@ -40,6 +40,38 @@ class GameStateDetector:
 
         logger.info("GameStateDetector initialized")
 
+    def detect_title_screen(self, image: np.ndarray) -> bool:
+        """
+        Detect if the game is at the title screen or file select.
+        
+        Args:
+            image: Full game screen
+            
+        Returns:
+            True if at title screen/file select
+        """
+        try:
+            # Use OCR to look for specific text
+            from claude_plays_zelda.vision.ocr import GameOCR
+            ocr = GameOCR()
+            
+            # Check for title screen text
+            # "ZELDA" is usually prominent, or "REGISTER YOUR NAME"
+            text = ocr.extract_text(image, preprocess=True)
+            
+            keywords = ["ZELDA", "LEGEND", "REGISTER", "ELIMINATION", "NAME"]
+            text_upper = text.upper()
+            
+            for keyword in keywords:
+                if keyword in text_upper:
+                    return True
+                    
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error detecting title screen: {e}")
+            return False
+
     def get_region(self, image: np.ndarray, region_key: str) -> Optional[np.ndarray]:
         """
         Extract a UI region from the screen.
@@ -251,6 +283,7 @@ class GameStateDetector:
             "rupees": self.detect_rupees(image),
             "current_item": self.detect_current_item(image),
             "location": self.detect_location(image),
+            "is_title_screen": self.detect_title_screen(image),
             "timestamp": None,  # Will be set by caller
         }
 
