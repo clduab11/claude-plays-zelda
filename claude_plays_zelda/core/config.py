@@ -88,9 +88,46 @@ class Config(BaseSettings):
             Config instance
         """
         import json
+        import yaml
 
-        with open(config_path, "r") as f:
-            config_data = json.load(f)
+        path = Path(config_path)
+        with open(path, "r") as f:
+            if path.suffix in ['.yaml', '.yml']:
+                config_data = yaml.safe_load(f)
+                # Flatten nested config if needed, or adjust Config model to match yaml structure
+                # The current config.yaml has nested keys (emulator: ...), but Config model is flat.
+                # We need to flatten it or update Config model.
+                # For now, let's assume we flatten it or map it.
+                
+                # Actually, looking at config.yaml, it has sections: claude, emulator, etc.
+                # But Config class has flat fields: emulator_path, rom_path.
+                # We need to map the yaml structure to the flat Config fields.
+                
+                flat_config = {}
+                if 'claude' in config_data:
+                    flat_config['anthropic_api_key'] = config_data['claude'].get('api_key')
+                    flat_config['claude_model'] = config_data['claude'].get('model')
+                    flat_config['max_tokens'] = config_data['claude'].get('max_tokens')
+                
+                if 'emulator' in config_data:
+                    flat_config['emulator_path'] = config_data['emulator'].get('executable_path')
+                    flat_config['rom_path'] = config_data['emulator'].get('rom_path')
+                    flat_config['window_title'] = config_data['emulator'].get('window_name')
+                
+                if 'cv' in config_data:
+                    flat_config['enable_ocr'] = True # Assumed if cv section exists
+                    flat_config['enable_object_detection'] = True
+                
+                # Merge with any other top level keys
+                for k, v in config_data.items():
+                    if k not in ['claude', 'emulator', 'cv', 'agent', 'game', 'streaming', 'logging']:
+                        flat_config[k] = v
+                        
+                # Filter out None values to let defaults/env vars take precedence
+                config_data = {k: v for k, v in flat_config.items() if v is not None}
+                
+            else:
+                config_data = json.load(f)
 
         return cls(**config_data)
 

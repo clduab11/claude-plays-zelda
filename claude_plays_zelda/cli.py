@@ -47,6 +47,8 @@ def play(config, emulator_path, rom_path, max_iterations):
         # Load configuration
         if config:
             cfg = Config.from_file(config)
+        elif Path("config.yaml").exists():
+            cfg = Config.from_file("config.yaml")
         else:
             cfg = Config()
 
