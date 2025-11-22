@@ -89,11 +89,41 @@ class Config(BaseSettings):
         """
         import json
         import yaml
+        import os
+        import re
+
+        def interpolate_env(value):
+            if isinstance(value, str):
+                # Match ${VAR_NAME}
+                pattern = r'\$\{([^}]+)\}'
+                matches = re.findall(pattern, value)
+                for var_name in matches:
+                    env_val = os.getenv(var_name)
+                    if env_val:
+                        value = value.replace(f"${{{var_name}}}", env_val)
+                    else:
+                        # If env var not found, leave it or handle error?
+                        # For now, let's try to load from .env file if not in os.environ
+                        pass
+                return value
+            elif isinstance(value, dict):
+                return {k: interpolate_env(v) for k, v in value.items()}
+            elif isinstance(value, list):
+                return [interpolate_env(v) for v in value]
+            return value
+
+        # Ensure .env is loaded
+        from dotenv import load_dotenv
+        load_dotenv()
 
         path = Path(config_path)
         with open(path, "r") as f:
             if path.suffix in ['.yaml', '.yml']:
                 config_data = yaml.safe_load(f)
+                
+                # Interpolate environment variables
+                config_data = interpolate_env(config_data)
+
                 # Flatten nested config if needed, or adjust Config model to match yaml structure
                 # The current config.yaml has nested keys (emulator: ...), but Config model is flat.
                 # We need to flatten it or update Config model.
