@@ -6,7 +6,7 @@ from loguru import logger
 
 from claude_plays_zelda.core.config import Config
 from claude_plays_zelda.core.orchestrator import GameOrchestrator
-from claude_plays_zelda.emulator.input_controller import SNESButton
+from claude_plays_zelda.emulator.input_controller import NESButton
 
 
 from enum import Enum, auto
@@ -97,11 +97,12 @@ class GameLoop:
                     if self.state == GameState.MENU:
                         # MENU LOGIC: Robust start sequence
                         logger.info("State: MENU - Executing start sequence...")
+                        print("\n🔵 STREAM UPDATE: Starting Game Sequence...")
                         
                         # Press START multiple times with delays to ensure we skip title/intro
-                        self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
+                        self.orchestrator.emulator.input_controller.press_button(NESButton.START)
                         time.sleep(0.5)
-                        self.orchestrator.emulator.input_controller.press_button(SNESButton.START)
+                        self.orchestrator.emulator.input_controller.press_button(NESButton.START)
                         
                         # Wait a bit longer in menu to allow screen transitions
                         last_decision_time = time.time() + 2.0 
@@ -110,6 +111,14 @@ class GameLoop:
                     elif self.state == GameState.PLAYING:
                         # GAMEPLAY LOGIC: AI Agent
                         decision = self.orchestrator.make_decision(frame_data)
+
+                        # Stream-friendly output
+                        action = decision.get("action", "wait").upper()
+                        reasoning = decision.get("reasoning", "")
+                        print(f"\n{'='*40}")
+                        print(f"🤖 CLAUDE DECIDES: {action}")
+                        print(f"💭 THOUGHT: {reasoning}")
+                        print(f"{'='*40}\n")
 
                         # Execute action
                         frame_data_before = frame_data
@@ -128,6 +137,7 @@ class GameLoop:
                 if current_time - self.last_save_time >= self.config.auto_save_interval:
                     self.orchestrator.save_checkpoint(slot=0)
                     self.last_save_time = current_time
+                    print("💾 STREAM UPDATE: Auto-saved game")
 
                 # Small delay to control frame rate
                 time.sleep(1.0 / self.config.frame_rate)
@@ -136,8 +146,10 @@ class GameLoop:
 
         except KeyboardInterrupt:
             logger.info("Game loop interrupted by user")
+            print("\n🔴 STREAM ENDED: User interrupted")
         except Exception as e:
             logger.error(f"Error in game loop: {e}")
+            print(f"\n⚠️ STREAM ERROR: {e}")
         finally:
             self.stop()
 

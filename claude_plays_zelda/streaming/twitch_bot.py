@@ -11,6 +11,7 @@ class TwitchBot(commands.Bot):
     def __init__(
         self,
         token: str,
+        agent: Any = None,
         prefix: str = "!",
         initial_channels: list = None,
         stats_callback: Optional[Callable] = None,
@@ -20,6 +21,7 @@ class TwitchBot(commands.Bot):
 
         Args:
             token: Twitch OAuth token
+            agent: ClaudeAgent instance
             prefix: Command prefix
             initial_channels: List of channels to join
             stats_callback: Callback function to get current game stats
@@ -30,6 +32,7 @@ class TwitchBot(commands.Bot):
             initial_channels=initial_channels or [],
         )
 
+        self.agent = agent
         self.stats_callback = stats_callback
         self.start_time = datetime.now()
         self.command_count = 0
@@ -59,6 +62,32 @@ class TwitchBot(commands.Bot):
         self.viewer_interactions[author] = self.viewer_interactions.get(author, 0) + 1
 
         await self.handle_commands(message)
+
+    @commands.command(name="ask")
+    async def cmd_ask(self, ctx):
+        """Ask Claude a question."""
+        self.command_count += 1
+        
+        # Get question text
+        question = ctx.message.content.replace("!ask", "").strip()
+        if not question:
+            await ctx.send(f"@{ctx.author.name} Usage: !ask <your question>")
+            return
+
+        if self.agent:
+            # Get current context
+            stats = self._get_current_stats()
+            
+            # Generate response
+            response = self.agent.chat_with_viewers(
+                user=ctx.author.name,
+                question=question,
+                game_context=stats
+            )
+            
+            await ctx.send(f"🤖 {response}")
+        else:
+            await ctx.send("Claude is currently offline (Agent not connected).")
 
     @commands.command(name="stats")
     async def cmd_stats(self, ctx):
@@ -101,7 +130,7 @@ class TwitchBot(commands.Bot):
         self.command_count += 1
 
         response = (
-            "🎮 Commands: !stats (game stats) | !progress (current objective) | "
+            "🎮 Commands: !ask (talk to Claude) | !stats (game stats) | !progress (current objective) | "
             "!deaths (death count) | !uptime (stream time) | !ai (AI info)"
         )
 

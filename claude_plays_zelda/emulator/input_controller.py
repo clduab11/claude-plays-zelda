@@ -8,8 +8,8 @@ from pynput.keyboard import Controller, Key
 from loguru import logger
 
 
-class SNESButton(Enum):
-    """SNES controller button mappings."""
+class NESButton(Enum):
+    """NES controller button mappings."""
 
     UP = "up"
     DOWN = "down"
@@ -17,12 +17,8 @@ class SNESButton(Enum):
     RIGHT = "right"
     A = "a"
     B = "b"
-    X = "x"
-    Y = "y"
-    L = "l"
-    R = "r"
-    START = "return"
-    SELECT = "rshift"
+    START = "start"
+    SELECT = "select"
 
 
 class InputController:
@@ -30,7 +26,7 @@ class InputController:
 
     def __init__(
         self,
-        key_map: Optional[Dict[SNESButton, str]] = None,
+        key_map: Optional[Dict[NESButton, str]] = None,
         default_press_duration: float = 0.1,
         default_delay_between_inputs: float = 0.05,
     ):
@@ -38,7 +34,7 @@ class InputController:
         Initialize input controller.
 
         Args:
-            key_map: Custom key mapping for SNES buttons
+            key_map: Custom key mapping for NES buttons
             default_press_duration: Default duration to hold keys (seconds)
             default_delay_between_inputs: Default delay between consecutive inputs
         """
@@ -46,33 +42,29 @@ class InputController:
         self.default_press_duration = default_press_duration
         self.default_delay = default_delay_between_inputs
 
-        # Default key mapping (can be customized)
+        # Default key mapping for Mesen
         self.key_map = key_map or {
-            SNESButton.UP: "up",
-            SNESButton.DOWN: "down",
-            SNESButton.LEFT: "left",
-            SNESButton.RIGHT: "right",
-            SNESButton.A: "x",  # Common Snes9x mapping
-            SNESButton.B: "z",
-            SNESButton.X: "s",
-            SNESButton.Y: "a",
-            SNESButton.L: "d",
-            SNESButton.R: "c",
-            SNESButton.START: "return",
-            SNESButton.SELECT: "rshift",
+            NESButton.UP: "up",
+            NESButton.DOWN: "down",
+            NESButton.LEFT: "left",
+            NESButton.RIGHT: "right",
+            NESButton.A: "x",      # Mesen default for A
+            NESButton.B: "z",      # Mesen default for B
+            NESButton.START: "enter", # Mesen default for Start
+            NESButton.SELECT: "shiftright", # Mesen default for Select
         }
 
         self.currently_pressed: set = set()
-        logger.info("InputController initialized")
+        logger.info("InputController initialized for NES")
 
     def press_button(
-        self, button: SNESButton, duration: Optional[float] = None, delay_after: Optional[float] = None
+        self, button: NESButton, duration: Optional[float] = None, delay_after: Optional[float] = None
     ) -> None:
         """
         Press a button for a specified duration.
 
         Args:
-            button: SNES button to press
+            button: NES button to press
             duration: How long to hold the button (None = default)
             delay_after: Delay after releasing button (None = default)
         """
@@ -103,13 +95,13 @@ class InputController:
             logger.error(f"Error pressing button {button}: {e}")
 
     def press_buttons_simultaneously(
-        self, buttons: List[SNESButton], duration: Optional[float] = None, delay_after: Optional[float] = None
+        self, buttons: List[NESButton], duration: Optional[float] = None, delay_after: Optional[float] = None
     ) -> None:
         """
         Press multiple buttons simultaneously (e.g., diagonal movement).
 
         Args:
-            buttons: List of SNES buttons to press together
+            buttons: List of NES buttons to press together
             duration: How long to hold the buttons
             delay_after: Delay after releasing buttons
         """
@@ -140,7 +132,7 @@ class InputController:
 
     def press_sequence(
         self,
-        sequence: List[SNESButton],
+        sequence: List[NESButton],
         duration_per_button: Optional[float] = None,
         delay_between: Optional[float] = None,
     ) -> None:
@@ -157,21 +149,20 @@ class InputController:
             self.press_button(button, duration_per_button, delay_between)
 
     def move_direction(
-        self, direction: str, duration: float = 0.2, run: bool = False
+        self, direction: str, duration: float = 0.2
     ) -> None:
         """
-        Move Link in a direction (with optional running).
+        Move Link in a direction.
 
         Args:
             direction: Direction to move (up, down, left, right)
             duration: How long to move
-            run: Whether to hold B button to run
         """
         direction_map = {
-            "up": SNESButton.UP,
-            "down": SNESButton.DOWN,
-            "left": SNESButton.LEFT,
-            "right": SNESButton.RIGHT,
+            "up": NESButton.UP,
+            "down": NESButton.DOWN,
+            "left": NESButton.LEFT,
+            "right": NESButton.RIGHT,
         }
 
         direction_button = direction_map.get(direction.lower())
@@ -179,31 +170,26 @@ class InputController:
             logger.warning(f"Invalid direction: {direction}")
             return
 
-        if run:
-            # Hold B and direction to run
-            self.press_buttons_simultaneously([SNESButton.B, direction_button], duration, 0.05)
-        else:
-            self.press_button(direction_button, duration, 0.05)
+        self.press_button(direction_button, duration, 0.05)
 
-    def attack(self, charge: bool = False) -> None:
+    def attack(self) -> None:
         """
-        Perform an attack with Link's sword.
-
-        Args:
-            charge: Whether to charge the sword (hold longer)
+        Perform an attack with Link's sword (A button in NES Zelda usually, or B? 
+        Actually in NES Zelda: A is Sword, B is Item. Wait, let me double check.
+        Standard: A = Sword, B = Item. 
         """
-        duration = 1.5 if charge else 0.1
-        self.press_button(SNESButton.Y, duration=duration)
-        logger.debug(f"Attack executed (charged={charge})")
+        # In NES Zelda: A is Sword, B is Item.
+        self.press_button(NESButton.A, duration=0.1)
+        logger.debug("Attack executed")
 
     def use_item(self) -> None:
-        """Use the currently selected secondary item (A button)."""
-        self.press_button(SNESButton.A, duration=0.1)
+        """Use the currently selected secondary item (B button)."""
+        self.press_button(NESButton.B, duration=0.1)
         logger.debug("Item used")
 
     def open_menu(self) -> None:
-        """Open the game menu."""
-        self.press_button(SNESButton.START, duration=0.1, delay_after=0.5)
+        """Open the game menu (Start)."""
+        self.press_button(NESButton.START, duration=0.1, delay_after=0.5)
         logger.debug("Menu opened")
 
     def release_all(self) -> None:
@@ -225,27 +211,32 @@ class InputController:
         """
         time.sleep(duration)
 
-    def focus_window(self, window_title: str = "Snes9x") -> bool:
+    def focus_window(self, window_title: str = "Mesen") -> bool:
         """
         Attempt to focus the emulator window.
 
         Args:
             window_title: Title of window to focus
-
-        Returns:
-            True if window was focused successfully
         """
         try:
             import pygetwindow as gw
 
-            windows = gw.getWindowsWithTitle(window_title)
-            if windows:
-                windows[0].activate()
+            # Mesen window title often contains the ROM name, so we search for substring
+            windows = gw.getAllWindows()
+            target_window = None
+            
+            for window in windows:
+                if window_title.lower() in window.title.lower():
+                    target_window = window
+                    break
+            
+            if target_window:
+                target_window.activate()
                 time.sleep(0.2)
-                logger.info(f"Focused window: {window_title}")
+                logger.info(f"Focused window: {target_window.title}")
                 return True
             else:
-                logger.warning(f"Window not found: {window_title}")
+                logger.warning(f"Window containing '{window_title}' not found")
                 return False
         except ImportError:
             logger.warning("pygetwindow not available, cannot focus window")

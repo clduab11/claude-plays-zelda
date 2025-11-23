@@ -18,27 +18,29 @@ class GameStateDetector:
                 "lower": np.array([0, 100, 100]),
                 "upper": np.array([10, 255, 255]),
             },
-            "heart_empty": {
-                "lower": np.array([0, 0, 50]),
-                "upper": np.array([10, 50, 150]),
+            "heart_empty": { # NES empty hearts are often white/gray or just black background
+                 "lower": np.array([0, 0, 150]),
+                 "upper": np.array([180, 20, 255]),
             },
-            # Rupee counter (typically green or yellow)
+            # Rupee counter (typically white/yellow text on black)
             "rupee_digit": {
-                "lower": np.array([35, 50, 50]),
-                "upper": np.array([85, 255, 255]),
+                "lower": np.array([0, 0, 150]),
+                "upper": np.array([180, 50, 255]),
             },
         }
 
         # UI element positions (relative to screen size)
-        # These are approximate for Zelda ALTTP
+        # NES Zelda HUD is at the top of the screen
         self.ui_regions = {
-            "hearts": (0.05, 0.85, 0.3, 0.1),  # (x, y, width, height) as ratios
-            "rupees": (0.05, 0.05, 0.15, 0.08),
-            "item_box": (0.75, 0.05, 0.2, 0.15),
-            "minimap": (0.02, 0.02, 0.15, 0.15),
+            "hud": (0.0, 0.0, 1.0, 0.25), # Top 25% is roughly the HUD
+            "hearts": (0.65, 0.15, 0.3, 0.1),  # Hearts are on the right side of HUD
+            "rupees": (0.3, 0.05, 0.15, 0.08), # Rupees near middle-left
+            "item_box_b": (0.5, 0.1, 0.1, 0.1), # B Item
+            "item_box_a": (0.6, 0.1, 0.1, 0.1), # A Item
+            "minimap": (0.05, 0.05, 0.2, 0.15), # Minimap top left
         }
 
-        logger.info("GameStateDetector initialized")
+        logger.info("GameStateDetector initialized for NES")
 
     def detect_title_screen(self, image: np.ndarray) -> bool:
         """
@@ -56,10 +58,11 @@ class GameStateDetector:
             ocr = GameOCR()
             
             # Check for title screen text
-            # "ZELDA" is usually prominent, or "REGISTER YOUR NAME"
+            # NES Zelda Title Screen has "THE LEGEND OF ZELDA"
+            # File Select has "REGISTER YOUR NAME" or "ELIMINATION MODE"
             text = ocr.extract_text(image, preprocess=True)
             
-            keywords = ["ZELDA", "LEGEND", "REGISTER", "ELIMINATION", "NAME"]
+            keywords = ["ZELDA", "LEGEND", "REGISTER", "ELIMINATION", "NAME", "STORY", "CONTINUE", "SAVE"]
             text_upper = text.upper()
             
             for keyword in keywords:
@@ -86,18 +89,11 @@ class GameStateDetector:
             # Check for hearts - stricter check
             hearts = self.detect_hearts(image)
             
-            # Link starts with 3 hearts, max is usually 16-20. 
-            # 9 hearts on title screen is a clear false positive.
-            # Also, if we have 0 max hearts, we are definitely not in game.
-            if hearts["max_hearts"] < 3 or hearts["max_hearts"] > 20:
+            # Link starts with 3 hearts.
+            if hearts["max_hearts"] < 3:
                 return False
                 
-            # Secondary check: Minimap or Rupees
-            # The minimap is usually a good indicator of gameplay
-            # But it might be black in dungeons.
-            
-            # Let's trust the heart count if it's reasonable (3-20)
-            # AND if we are not on the title screen
+            # If we are on the title screen, we are not playing
             if self.detect_title_screen(image):
                 return False
                 
@@ -157,7 +153,8 @@ class GameStateDetector:
                 self.color_ranges["heart_full"]["upper"],
             )
 
-            # Detect empty hearts (darker red/gray)
+            # Detect empty hearts (often white outline or specific color in NES)
+            # This might need tuning for NES palette
             mask_empty = cv2.inRange(
                 hsv,
                 self.color_ranges["heart_empty"]["lower"],
@@ -166,13 +163,13 @@ class GameStateDetector:
 
             # Count heart containers based on connected components
             full_hearts = self._count_hearts(mask_full)
-            empty_hearts = self._count_hearts(mask_empty)
-
-            max_hearts = full_hearts + empty_hearts
-
-            result = {"current_hearts": full_hearts, "max_hearts": max_hearts}
-            logger.debug(f"Hearts detected: {result}")
-            return result
+            # Empty heart counting might be tricky with just color, 
+            # might need template matching later if this fails.
+            # For now, assume if we see red hearts, we are good.
+            
+            # In NES Zelda, hearts are distinct sprites.
+            
+            return {"current_hearts": full_hearts, "max_hearts": full_hearts} # Simplified for now
 
         except Exception as e:
             logger.error(f"Error detecting hearts: {e}")
@@ -193,8 +190,9 @@ class GameStateDetector:
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
             # Filter contours by size (hearts have consistent size)
-            min_area = 50
-            max_area = 500
+            # NES resolution is low, hearts are small (8x8 roughly)
+            min_area = 10
+            max_area = 100
             valid_hearts = [
                 c for c in contours if min_area < cv2.contourArea(c) < max_area
             ]
@@ -224,14 +222,17 @@ class GameStateDetector:
             from claude_plays_zelda.vision.ocr import GameOCR
 
             ocr = GameOCR()
+            # Preprocess specifically for digits?
             text = ocr.extract_text(rupee_region, preprocess=True)
 
             # Extract numeric value
             import re
 
+            # Look for X followed by digits, e.g. "X 5"
             numbers = re.findall(r"\d+", text)
             if numbers:
-                rupee_count = int(numbers[0])
+                # If multiple numbers, take the last one (often X is read as something else)
+                rupee_count = int(numbers[-1])
                 logger.debug(f"Rupees detected: {rupee_count}")
                 return rupee_count
 
@@ -252,14 +253,11 @@ class GameStateDetector:
             Item name or None if no item detected
         """
         try:
-            item_region = self.get_region(image, "item_box")
+            item_region = self.get_region(image, "item_box_b")
             if item_region is None:
                 return None
 
-            # Use template matching or color detection to identify items
-            # For now, return a placeholder
-            # TODO: Implement item recognition using templates or CNN
-
+            # TODO: Implement item recognition
             return None
 
         except Exception as e:

@@ -150,7 +150,7 @@ class CombatAI:
     ) -> Dict[str, Any]:
         """Get action to retreat from enemies."""
         if not enemies or not link_position:
-            return {"action": "move", "parameters": {"direction": "down", "duration": 1.0, "run": True}}
+            return {"action": "move", "parameters": {"direction": "down", "duration": 1.0}}
 
         # Move away from nearest enemy
         nearest_enemy = enemies[0]
@@ -166,21 +166,21 @@ class CombatAI:
             direction = "down" if dy > 0 else "up"
 
         logger.debug(f"Retreating {direction} from enemy")
-        return {"action": "move", "parameters": {"direction": direction, "duration": 1.0, "run": True}}
+        return {"action": "move", "parameters": {"direction": direction, "duration": 1.0}}
 
     def _get_defensive_action(
         self, enemies: List[Dict[str, Any]], link_position: Optional[Tuple[int, int]]
     ) -> Dict[str, Any]:
         """Get defensive combat action."""
         # Quick attack and dodge
-        return {"action": "attack", "parameters": {"charge": False}}
+        return {"action": "attack", "parameters": {}}
 
     def _get_aggressive_action(
         self, enemies: List[Dict[str, Any]], link_position: Optional[Tuple[int, int]]
     ) -> Dict[str, Any]:
         """Get aggressive combat action."""
         # Charged attack for more damage
-        return {"action": "attack", "parameters": {"charge": True}}
+        return {"action": "attack", "parameters": {}}
 
     def _get_balanced_action(
         self, enemies: List[Dict[str, Any]], link_position: Optional[Tuple[int, int]]
@@ -190,10 +190,10 @@ class CombatAI:
         import random
 
         if random.random() < 0.7:
-            return {"action": "attack", "parameters": {"charge": False}}
+            return {"action": "attack", "parameters": {}}
         else:
             direction = random.choice(["up", "down", "left", "right"])
-            return {"action": "move", "parameters": {"direction": direction, "duration": 0.3, "run": False}}
+            return {"action": "move", "parameters": {"direction": direction, "duration": 0.3}}
 
     def identify_enemy_type(self, enemy: Dict[str, Any]) -> EnemyType:
         """

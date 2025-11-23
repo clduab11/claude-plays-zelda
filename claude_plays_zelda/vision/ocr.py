@@ -68,20 +68,28 @@ class GameOCR:
             Preprocessed image
         """
         try:
+            # Scale up the image (4x) using Nearest Neighbor to preserve pixel edges
+            # This is crucial for NES pixel fonts
+            scale = 4
+            height, width = image.shape[:2]
+            scaled = cv2.resize(image, (width * scale, height * scale), interpolation=cv2.INTER_NEAREST)
+
             # Convert to grayscale
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(scaled, cv2.COLOR_BGR2GRAY)
 
             # Apply thresholding to get black text on white background
+            # Otsu's binarization
             _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+            # Invert if text is white on black (common in NES)
+            # Check average brightness - if low (dark), invert
+            if np.mean(thresh) < 127:
+                thresh = cv2.bitwise_not(thresh)
 
             # Denoise
             denoised = cv2.fastNlMeansDenoising(thresh)
 
-            # Increase contrast
-            clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-            enhanced = clahe.apply(denoised)
-
-            return enhanced
+            return denoised
 
         except Exception as e:
             logger.error(f"Error preprocessing image: {e}")
@@ -140,11 +148,11 @@ class GameOCR:
             Extracted dialogue text
         """
         try:
-            # Default dialogue box region for Zelda ALTTP (bottom of screen)
+            # Default dialogue box region for NES Zelda (Play area, below HUD)
             if dialogue_region is None:
                 height, width = image.shape[:2]
-                # Dialogue box is typically at the bottom 25% of screen
-                dialogue_region = (0, int(height * 0.75), width, int(height * 0.25))
+                # HUD is top 25%, so look at the rest
+                dialogue_region = (0, int(height * 0.25), width, int(height * 0.75))
 
             x, y, w, h = dialogue_region
             dialogue_box = image[y : y + h, x : x + w]
@@ -199,12 +207,19 @@ class GameOCR:
         """
         try:
             # Use Tesseract's data output to get bounding boxes
+            # Preprocess first for better detection
+            processed = self.preprocess_image(image)
+            
             data = pytesseract.image_to_data(
-                image, config=self.tesseract_config, output_type=pytesseract.Output.DICT
+                processed, config=self.tesseract_config, output_type=pytesseract.Output.DICT
             )
 
             text_regions = []
             n_boxes = len(data["text"])
+            
+            # Note: Bounding boxes will be in the scaled coordinate space!
+            # We need to scale them back down if we want original coordinates.
+            scale = 4 # Must match preprocess_image scale
 
             for i in range(n_boxes):
                 # Only include regions with actual text
@@ -214,10 +229,10 @@ class GameOCR:
                         text_regions.append(
                             {
                                 "bbox": (
-                                    data["left"][i],
-                                    data["top"][i],
-                                    data["width"][i],
-                                    data["height"][i],
+                                    int(data["left"][i] / scale),
+                                    int(data["top"][i] / scale),
+                                    int(data["width"][i] / scale),
+                                    int(data["height"][i] / scale),
                                 ),
                                 "text": text,
                                 "confidence": data["conf"][i],

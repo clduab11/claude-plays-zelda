@@ -23,6 +23,30 @@
 
 _(Coming soon - AI gameplay videos)_
 
+## 🔴 Watch Live
+
+Claude plays Zelda live on Twitch! Join the chat to interact with the AI, ask questions, and influence the gameplay.
+
+[**👉 Watch on Twitch**](https://twitch.tv/claudeplayszelda)
+
+## 🤝 Support the Stream
+
+If you enjoy watching an AI struggle through water temples, consider supporting the project!
+
+- [**GitHub Sponsors**](https://github.com/sponsors/clduab11)
+- [**Ko-fi**](https://ko-fi.com/claudeplayszelda)
+
+## 💬 Interact with Claude
+
+You can talk to Claude directly through Twitch chat!
+
+| Command | Description |
+|---------|-------------|
+| `!ask <question>` | Ask Claude a question about the game or its strategy |
+| `!stats` | View current health, rupees, and items |
+| `!progress` | See current objective and uptime |
+| `!deaths` | Check the death counter (it happens!) |
+
 ## 📋 Quick Start
 
 ```bash
@@ -96,9 +120,9 @@ zelda-ai play --emulator-path /path/to/snes9x --rom-path /path/to/zelda.smc
 
 Inspired by Google DeepMind's SIMA 2, this agent is evolving to "play, reason, and learn":
 
-1.  **Reasoning**: Uses Chain-of-Thought to plan complex sequences before acting.
-2.  **Multimodal**: Can understand goals from images (e.g., "Go to this location" from a screenshot).
-3.  **Self-Improvement**: Learns from its own gameplay, storing successful strategies in a `StrategyBank`.
+1. **Reasoning**: Uses Chain-of-Thought to plan complex sequences before acting.
+2. **Multimodal**: Can understand goals from images (e.g., "Go to this location" from a screenshot).
+3. **Self-Improvement**: Learns from its own gameplay, storing successful strategies in a `StrategyBank`.
 
 ## 💻 Usage Examples
 

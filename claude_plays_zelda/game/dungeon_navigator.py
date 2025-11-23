@@ -119,23 +119,23 @@ class DungeonNavigator:
         # Priority 1: Collect nearby items
         if items:
             logger.debug("Suggesting to collect item")
-            return {"action": "move", "parameters": {"direction": "up", "duration": 1.0, "run": True}}
+            return {"action": "move", "parameters": {"direction": "up", "duration": 1.0}}
 
         # Priority 2: Clear enemies if blocking progress
         if enemies and len(enemies) <= 2:
             logger.debug("Suggesting combat to clear path")
-            return {"action": "attack", "parameters": {"charge": False}}
+            return {"action": "attack", "parameters": {}}
 
         # Priority 3: Explore through doors
         if doors:
             # Choose unexplored door if possible - simplified, would calculate actual direction
             logger.debug("Suggesting to explore through door")
-            return {"action": "move", "parameters": {"direction": "up", "duration": 2.0, "run": False}}
+            return {"action": "move", "parameters": {"direction": "up", "duration": 2.0}}
 
         # Priority 4: Search for doors
         direction = random.choice(["up", "down", "left", "right"])
         logger.debug(f"Suggesting exploratory movement: {direction}")
-        return {"action": "move", "parameters": {"direction": direction, "duration": 1.5, "run": False}}
+        return {"action": "move", "parameters": {"direction": direction, "duration": 1.5}}
 
     def is_likely_boss_room(self, room_data: Dict[str, Any]) -> bool:
         """
